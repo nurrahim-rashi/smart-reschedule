@@ -1,0 +1,21 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "Backend Smart Reschedule Assistant",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "start:dev": "nodemon src/server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@hapi/hapi": "^21.4.12",
+    "dotenv": "^18.0.9"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}
