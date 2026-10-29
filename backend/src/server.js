@@ -2,6 +2,7 @@ import "dotenv/config";
 import Hapi from "@hapi/hapi";
 import { ClientError } from "./exceptions/index.js";
 import users from "./services/users/index.js";
+import authentications from "./services/authentications/index.js";
 
 const init = async () => {
     const server = Hapi.server({
@@ -39,6 +40,7 @@ const init = async () => {
     });
 
     await server.register(users);
+    await server.register(authentications);
     await server.start();
     console.log(`Server berjalan di ${server.info.uri}`);
 };
