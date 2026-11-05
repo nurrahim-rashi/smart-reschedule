@@ -38,4 +38,8 @@ function getAccessToken() {
     return localStorage.getItem('accessToken');
 }
 
-export { register, login, putAccessToken, getAccessToken };
+function removeAccessToken() {
+    localStorage.removeItem('accessToken');
+}
+
+export { register, login, putAccessToken, getAccessToken, removeAccessToken };
