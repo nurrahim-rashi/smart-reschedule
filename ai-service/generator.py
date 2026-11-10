@@ -1,7 +1,12 @@
+import logging
 import os
+import re
 
 from dotenv import load_dotenv
 from google import genai
+from google.genai import types
+
+logger = logging.getLogger(__name__)
 
 # =========================
 # LOAD ENVIRONMENT
@@ -10,7 +15,10 @@ from google import genai
 load_dotenv()
 
 client = genai.Client(
-    api_key=os.getenv("GEMINI_API_KEY")
+    api_key=os.getenv("GEMINI_API_KEY"),
+    http_options=types.HttpOptions(
+        timeout=15000  # milidetik
+    )
 )
 
 
@@ -156,6 +164,51 @@ Terima kasih."""
 
 
 # =========================
+# OUTPUT VALIDATION
+# =========================
+
+TIME_PATTERN = r"\b(\d{1,2})[:.](\d{2})\b"
+
+
+def extract_times(text):
+
+    return {
+        f"{int(hour)}:{minute}"
+        for hour, minute in re.findall(TIME_PATTERN, text or "")
+    }
+
+
+def validate_reply(
+    reply,
+    slots,
+    message=None,
+    current_schedule=None
+):
+    """
+    Pastikan draft tidak menyebut jam yang tidak ada di data.
+
+    Returns:
+        str | None: alasan draft ditolak, atau None jika valid
+    """
+
+    if not reply or not reply.strip():
+
+        return "empty_reply"
+
+    allowed_times = extract_times(
+        " ".join(slots + [message or "", current_schedule or ""])
+    )
+
+    unknown_times = extract_times(reply) - allowed_times
+
+    if unknown_times:
+
+        return f"unknown_time: {', '.join(sorted(unknown_times))}"
+
+    return None
+
+
+# =========================
 # GENERATE REPLY
 # =========================
 
@@ -167,6 +220,11 @@ def generate_reply(
     current_schedule=None,
     preferences=None
 ):
+    """
+    Returns:
+        tuple: (draft, source)
+        source = "gemini" atau "fallback"
+    """
 
     prompt = build_prompt(
         intent,
@@ -184,12 +242,34 @@ def generate_reply(
             contents=prompt
         )
 
-        return response.text
+        draft = (response.text or "").strip()
 
-    except Exception:
-
-        return fallback_reply(
-            intent,
+        rejection = validate_reply(
+            draft,
             slots,
-            customer_name
+            message,
+            current_schedule
         )
+
+        if rejection is None:
+
+            return draft, "gemini"
+
+        logger.warning(
+            "Draft Gemini ditolak (%s): %r",
+            rejection,
+            draft
+        )
+
+    except Exception as e:
+
+        logger.error(
+            "Gemini gagal: %s",
+            e
+        )
+
+    return fallback_reply(
+        intent,
+        slots,
+        customer_name
+    ), "fallback"

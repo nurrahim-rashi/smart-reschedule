@@ -1,9 +1,21 @@
+import logging
+import os
+
+from dotenv import load_dotenv
 from fastapi import FastAPI
-from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, Field
 
 from predictor import predict_intent
-from generator import generate_reply
+from generator import generate_reply, fallback_reply
 from extractor import extract_preferences
+
+
+load_dotenv()
+
+logging.basicConfig(
+    level=logging.INFO
+)
 
 
 app = FastAPI(
@@ -14,22 +26,58 @@ app = FastAPI(
 
 
 # =========================
+# CORS
+# =========================
+
+CORS_ORIGINS = os.getenv(
+    "CORS_ORIGINS",
+    "http://localhost:5173,http://127.0.0.1:5173"
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        origin.strip()
+        for origin in CORS_ORIGINS.split(",")
+        if origin.strip()
+    ],
+    allow_methods=["GET", "POST"],
+    allow_headers=["*"]
+)
+
+
+# =========================
+# CONFIG
+# =========================
+
+# Di bawah nilai ini intent dianggap tidak yakin dan draft perlu dicek admin
+CONFIDENCE_THRESHOLD = 0.6
+
+
+# =========================
 # SCHEMAS
 # =========================
 
 class Message(BaseModel):
-    message: str
+    message: str = Field(min_length=1, max_length=1000)
 
 
 class ReplyRequest(BaseModel):
-    intent: str
-    slots: list[str] = []
-    message: str | None = None
-    customer_name: str | None = None
-    current_schedule: str | None = None
+    intent: str = Field(max_length=50)
+    slots: list[str] = Field(default=[], max_length=20)
+    message: str | None = Field(default=None, max_length=1000)
+    customer_name: str | None = Field(default=None, max_length=100)
+    current_schedule: str | None = Field(default=None, max_length=100)
     preferred_day: str | None = None
     preferred_period: str | None = None
     preferred_time: str | None = None
+
+
+class DraftRequest(BaseModel):
+    message: str = Field(min_length=1, max_length=1000)
+    slots: list[str] = Field(default=[], max_length=20)
+    customer_name: str | None = Field(default=None, max_length=100)
+    current_schedule: str | None = Field(default=None, max_length=100)
 
 
 # =========================
@@ -112,7 +160,7 @@ def generate(request: ReplyRequest):
             request.message
         )
 
-    draft = generate_reply(
+    draft, source = generate_reply(
         request.intent,
         request.slots,
         request.message,
@@ -122,7 +170,8 @@ def generate(request: ReplyRequest):
     )
 
     return {
-        "draft_reply": draft
+        "draft_reply": draft,
+        "source": source
     }
 
 
@@ -152,4 +201,60 @@ def analyze_message(data: Message):
         "preferred_day": preferred_day,
         "preferred_period": preferred_period,
         "preferred_time": preferred_time
+    }
+
+
+# =========================
+# FULL PIPELINE
+# =========================
+
+@app.post("/draft-reply")
+def draft_reply(request: DraftRequest):
+
+    intent, confidence = predict_intent(
+        request.message
+    )
+
+    (
+        preferred_day,
+        preferred_period,
+        preferred_time
+    ) = extract_preferences(
+        request.message
+    )
+
+    if confidence < CONFIDENCE_THRESHOLD:
+
+        # Intent tidak yakin: jangan biarkan Gemini menebak, serahkan ke admin
+        draft = fallback_reply(
+            "other",
+            request.slots,
+            request.customer_name
+        )
+        source = "low_confidence"
+
+    else:
+
+        draft, source = generate_reply(
+            intent,
+            request.slots,
+            request.message,
+            request.customer_name,
+            request.current_schedule,
+            {
+                "hari": preferred_day,
+                "waktu": preferred_period,
+                "jam": preferred_time
+            }
+        )
+
+    return {
+        "intent": intent,
+        "confidence": confidence,
+        "preferred_day": preferred_day,
+        "preferred_period": preferred_period,
+        "preferred_time": preferred_time,
+        "draft_reply": draft,
+        "source": source,
+        "needs_review": source != "gemini"
     }
