@@ -42,4 +42,24 @@ function removeAccessToken() {
     localStorage.removeItem('accessToken');
 }
 
-export { register, login, putAccessToken, getAccessToken, removeAccessToken };
+async function fetchWithToken(url, options = {}) {
+    return fetch(url, { ...options,
+        headers: {
+            ...options.headers,
+            Authorization: `Bearer ${getAccessToken()}`,
+        },
+    });
+}
+
+async function getUserLogged() {
+    const response = await fetchWithToken(`${BASE_URL}/users/me`);
+    const responseJson = await response.json();
+
+    if (responseJson.status !== 'success') {
+        return { error: true, data: null };
+    }
+
+    return { error: false, data: responseJson.data.user };
+}
+
+export { register, login, putAccessToken, getAccessToken, removeAccessToken, getUserLogged };
