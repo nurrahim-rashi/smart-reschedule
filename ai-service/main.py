@@ -23,7 +23,13 @@ class Message(BaseModel):
 
 class ReplyRequest(BaseModel):
     intent: str
-    slots: list[str]
+    slots: list[str] = []
+    message: str | None = None
+    customer_name: str | None = None
+    current_schedule: str | None = None
+    preferred_day: str | None = None
+    preferred_period: str | None = None
+    preferred_time: str | None = None
 
 
 # =========================
@@ -89,9 +95,30 @@ def predict(data: Message):
 @app.post("/generate-reply")
 def generate(request: ReplyRequest):
 
+    preferences = {
+        "hari": request.preferred_day,
+        "waktu": request.preferred_period,
+        "jam": request.preferred_time
+    }
+
+    # Ambil preferensi dari pesan jika backend tidak mengirimkannya
+    if request.message and not any(preferences.values()):
+
+        (
+            preferences["hari"],
+            preferences["waktu"],
+            preferences["jam"]
+        ) = extract_preferences(
+            request.message
+        )
+
     draft = generate_reply(
         request.intent,
-        request.slots
+        request.slots,
+        request.message,
+        request.customer_name,
+        request.current_schedule,
+        preferences
     )
 
     return {
