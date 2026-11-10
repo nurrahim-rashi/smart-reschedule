@@ -30,7 +30,7 @@ function ReschedulePage() {
                 message,
             });
             if (replyResult.error) {
-                setErrorMessage('Gagal membuat draft balasam. Coba lagi nanti.');
+                setErrorMessage('Gagal membuat draft balasan. Coba lagi nanti.');
                 return;
             }
             setDraftReply(replyResult.data);
