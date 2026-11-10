@@ -3,6 +3,7 @@ import Hapi from "@hapi/hapi";
 import { ClientError } from "./exceptions/index.js";
 import users from "./services/users/index.js";
 import authentications from "./services/authentications/index.js";
+import Jwt from '@hapi/jwt';
 
 const init = async () => {
     const server = Hapi.server({
@@ -17,10 +18,11 @@ const init = async () => {
 
     server.route({
         method: 'GET',
-        path: '/coba-error',
-        handler: () => {
-            return { status: 'success', message: 'Gymnasyum API jalan' };
-        },
+        path: '/',
+        handler: () => ({
+                status: 'success', 
+                message: 'Gymnasyum API jalan', 
+        }),
     });
 
     server.ext('onPreResponse', (request, h) => {
@@ -44,8 +46,28 @@ const init = async () => {
         return h.continue;
     });
 
+    await server.register(Jwt);
+
+    server.auth.strategy('gymnasyum_jwt', 'jwt', {
+        keys: process.env.ACCESS_TOKEN_KEY,
+        verify: {
+            aud: false,
+            iss: false,
+            sub: false,
+            maxAgeSec: process.env.ACCESS_TOKEN_AGE,
+        },
+        validate: (artifacts) => ({
+            isValid: true,
+            credentials: {
+                id: artifacts.decoded.payload.id,
+                role: artifacts.decoded.payload.role,
+            },
+        }),
+    });
+
     await server.register(users);
     await server.register(authentications);
+
     await server.start();
     console.log(`Server berjalan di ${server.info.uri}`);
 };

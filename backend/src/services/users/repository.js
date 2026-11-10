@@ -50,6 +50,20 @@ class UsersRepository {
 
         return { id, role };
     }
+
+    async getUserById(id) {
+        const query = {
+            text: 'SELECT id, name, email, phone, role FROM users WHERE id = $1',
+            values: [id],
+        };
+
+        const result = await this.pool.query(query);
+        if (!result.rows.length) {
+            return null;
+        }
+
+        return result.rows[0];
+    }
 }
 
 export default new UsersRepository();

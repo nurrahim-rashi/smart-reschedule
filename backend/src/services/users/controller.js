@@ -1,6 +1,6 @@
 import UsersRepository from "./repository.js";
 import { validateUserPayload } from "./validator.js";
-import { InvariantError } from "../../exceptions/index.js";
+import { InvariantError, NotFoundError } from "../../exceptions/index.js";
 
 export const postUserHandler = async (request, h) => {
     const { name, email, phone, password } = validateUserPayload(request.payload);
@@ -17,4 +17,18 @@ export const postUserHandler = async (request, h) => {
         message: 'User berhasil ditambahkan',
         data: { userId },
     }).code(201);
+};
+
+export const getMeHandler = async (request) => {
+    const { id } = request.auth.credentials;
+
+    const user = await UsersRepository.getUserById(id);
+    if (!user) {
+        throw new NotFoundError('User tidak ditemukan');
+    }
+
+    return {
+        status: 'success',
+        data: { user },
+    };
 };
