@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { currentBooking, availableSlots } from "../utils/mock-data.js";
 import { analyzeMessage, generateReply } from "../utils/ai.js";
+import { getRecommendedSlots } from "../utils/slot.js";
 
 function ReschedulePage() {
     const [message, setMessage] = useState('');
@@ -8,13 +9,17 @@ function ReschedulePage() {
     const [errorMessage, setErrorMessage] = useState('');
     const [analysis, setAnalysis] = useState(null);
     const [draftReply, setDraftReply] = useState('');
-
+    const [selectedSlot, setSelectedSlot] = useState('');
+    const [submitted, setSubmitted] = useState(false);
+    
     async function onSubmitHandler(event) {
         event.preventDefault();
         setLoading(true);
         setErrorMessage('');
         setAnalysis(null);
         setDraftReply('');
+        setSelectedSlot('');
+        setSubmitted(false);
 
         try {
             const analyzeResult = await analyzeMessage(message);
@@ -40,6 +45,19 @@ function ReschedulePage() {
             setLoading(false);
         }
     }
+
+    function onAjukanHandler() {
+        console.log('Request reschedule:', {
+            bookingId: currentBooking.id,
+            message,
+            selectedSlot,
+        });
+        setSubmitted(true);
+    }
+
+    const recommendation = analysis
+    ? getRecommendedSlots(availableSlots, analysis.preferred_day, analysis.preferred_period)
+    : null;
 
     return (
         <section>
@@ -81,6 +99,48 @@ function ReschedulePage() {
                 <div>
                     <h3>Draft Balasan</h3>
                     <p>{draftReply}</p>
+                </div>
+            )}
+            {recommendation && (
+                <div>
+                    <h3>Pilih Jadwal Baru</h3>
+
+                    <p><strong>Rekomendasi</strong></p>
+                    {recommendation.matched.length === 0 && <p>Tidak ada slot yang cocok dengan permintaanmu.</p>}
+                    {recommendation.matched.map((slot) => (
+                        <label key={slot}>
+                            <input
+                            type="radio"
+                            name="slot"
+                            value={slot}
+                            checked={selectedSlot === slot}
+                            onChange={(event) => setSelectedSlot(event.target.value)}
+                            />
+                            {slot}
+                            <br />
+                        </label>
+                    ))}
+
+                    <p><strong>Slot lain</strong></p>
+                    {recommendation.others.map((slot) => (
+                        <label key={slot}>
+                            <input
+                            type="radio"
+                            name="slot"
+                            value={slot}
+                            checked={selectedSlot === slot}
+                            onChange={(event) => setSelectedSlot(event.target.value)}
+                            />
+                            {slot}
+                            <br />
+                        </label>
+                    ))}
+
+                    <button type="button" onClick={onAjukanHandler} disabled={!selectedSlot || submitted}>
+                        Ajukan
+                    </button>
+
+                    {submitted && <p>Request reschedule ke <strong>{selectedSlot}</strong> sudah dikirim. Tunggu persetujuan admin.</p>}
                 </div>
             )}
         </section>
