@@ -5,6 +5,8 @@ import users from "./services/users/index.js";
 import authentications from "./services/authentications/index.js";
 import Jwt from '@hapi/jwt';
 import timeSlots from "./services/timeSlots/index.js";
+import bookings from "./services/bookings/index.js";
+import rescheduleRequests from "./services/rescheduleRequests/index.js";
 
 const init = async () => {
     const server = Hapi.server({
@@ -69,6 +71,8 @@ const init = async () => {
     await server.register(users);
     await server.register(authentications);
     await server.register(timeSlots);
+    await server.register(bookings);
+    await server.register(rescheduleRequests);
 
     await server.start();
     console.log(`Server berjalan di ${server.info.uri}`);
