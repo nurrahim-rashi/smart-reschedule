@@ -55,7 +55,7 @@ function ReschedulePage() {
         setSubmitted(true);
     }
 
-    const recommendation = analysis
+    const recommendation = analysis && analysis.intent === 'reschedule'
     ? getRecommendedSlots(availableSlots, analysis.preferred_day, analysis.preferred_period)
     : null;
 
@@ -100,6 +100,9 @@ function ReschedulePage() {
                     <h3>Draft Balasan</h3>
                     <p>{draftReply}</p>
                 </div>
+            )}
+            {analysis && analysis.intent !== 'reschedule' && (
+                <p>Pesan ini bukan permintaan reschedule, jadi tidak perlu pilih jadwal baru.</p>
             )}
             {recommendation && (
                 <div>
