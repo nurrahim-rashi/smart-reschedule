@@ -1,12 +1,16 @@
-import { Routes, Route } from 'react-router-dom';
-import LoginPage from './pages/LoginPage.jsx';
-import RegisterPage from './pages/RegisterPage.jsx';
-import HomePage from './pages/HomePage.jsx';
-import ReschedulePage from './pages/ReschedulePage.jsx';
-import RequestStatusPage from './pages/RequestStatusPage.jsx';
-import Navigation from './components/Navigation.jsx';
-import { useState, useEffect } from 'react';
-import { getUserLogged, putAccessToken, removeAccessToken } from './utils/api.js';
+import { Routes, Route } from "react-router-dom";
+import LoginPage from "./pages/LoginPage.jsx";
+import RegisterPage from "./pages/RegisterPage.jsx";
+import HomePage from "./pages/HomePage.jsx";
+import ReschedulePage from "./pages/ReschedulePage.jsx";
+import RequestStatusPage from "./pages/RequestStatusPage.jsx";
+import Navigation from "./components/Navigation.jsx";
+import { useState, useEffect } from "react";
+import {
+  getUserLogged,
+  putAccessToken,
+  removeAccessToken,
+} from "./utils/api.js";
 
 function App() {
   const [authedUser, setAuthedUser] = useState(null);
@@ -14,9 +18,14 @@ function App() {
 
   useEffect(() => {
     async function fetchUser() {
-      const { data } = await getUserLogged();
-      setAuthedUser(data);
-      setInitializing(false);
+      try {
+        const { data } = await getUserLogged();
+        setAuthedUser(data);
+      } catch {
+        setAuthedUser(null);
+      } finally {
+        setInitializing(false);
+      }
     }
 
     fetchUser();
@@ -45,7 +54,10 @@ function App() {
         </header>
         <main>
           <Routes>
-            <Route path="/*" element={<LoginPage loginSuccess={onLoginSuccess} />} />
+            <Route
+              path="/*"
+              element={<LoginPage loginSuccess={onLoginSuccess} />}
+            />
             <Route path="/register" element={<RegisterPage />} />
           </Routes>
         </main>
