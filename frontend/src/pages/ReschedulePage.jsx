@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { currentBooking, availableSlots } from "../utils/mock-data.js";
-import { analyzeMessage, generateReply } from "../utils/ai.js";
+import { getDraftReply } from "../utils/ai.js";
 import { getRecommendedSlots } from "../utils/slot.js";
 
 function ReschedulePage() {
@@ -22,30 +22,21 @@ function ReschedulePage() {
         setSubmitted(false);
 
         try {
-            const analyzeResult = await analyzeMessage(message);
-            if (analyzeResult.error) {
+            const result = await getDraftReply({ message, slots: availableSlots });
+
+            if (result.error) {
                 setErrorMessage('Gagal menganalisis pesan. Coba lagi nanti.');
                 return;
             }
-            setAnalysis(analyzeResult.data);
-
-            const replyResult = await generateReply({
-                intent: analyzeResult.data.intent,
-                slots: availableSlots,
-                message,
-            });
-            if (replyResult.error) {
-                setErrorMessage('Gagal membuat draft balasan. Coba lagi nanti.');
-                return;
-            }
-            setDraftReply(replyResult.data);
+            setAnalysis(result.data);
+            setDraftReply(result.data.draft_reply);
         } catch {
             setErrorMessage('Tidak bisa terhubung ke layanan AI.');
         } finally {
             setLoading(false);
         }
     }
-
+    
     function onAjukanHandler() {
         console.log('Request reschedule:', {
             bookingId: currentBooking.id,

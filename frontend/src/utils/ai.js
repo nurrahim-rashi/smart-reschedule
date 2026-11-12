@@ -30,4 +30,19 @@ async function generateReply({ intent, slots, message }) {
     return { error: false, data: responseJson.draft_reply };
 }
 
-export { analyzeMessage, generateReply };
+async function getDraftReply({ message, slots}) {
+    const response = await fetch(`${AI_BASE_URL}/draft-reply`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', },
+        body: JSON.stringify({ message, slots }),
+    });
+
+    if (!response.ok) {
+        return { error: true, data: null };
+    }
+
+    const responseJson = await response.json();
+    return { error: false, data: responseJson };
+}
+
+export { analyzeMessage, generateReply, getDraftReply };
