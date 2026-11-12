@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { login, putAccessToken } from '../utils/api.js';
+import { login } from '../utils/api.js';
 
-function LoginPage() {
+function LoginPage({ loginSuccess }) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [message, setMessage] = useState('');
@@ -18,7 +18,7 @@ function LoginPage() {
             return;
         }
 
-        putAccessToken(result.data.accessToken);
+        await loginSuccess(result.data);
         navigate('/');
     }
 
