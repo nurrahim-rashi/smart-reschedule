@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { register } from '../utils/api.js';
+import { useNavigate, Link } from 'react-router-dom';
 
 function RegisterPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
+  const navigate = useNavigate();
 
   async function onSubmitHandler(event) {
     event.preventDefault();
@@ -17,7 +19,7 @@ function RegisterPage() {
       return;
     }
 
-    setMessage('Pendaftaran berhasil! Silakan login.');
+    navigate('/');
   }
 
   return (
@@ -45,6 +47,9 @@ function RegisterPage() {
         <button type="submit">Daftar</button>
       </form>
       {message && <p>{message}</p>}
+      <p>
+        Sudah punya akun? <Link to="/">Masuk di sini</Link>
+      </p>
     </section>
   );
 }
