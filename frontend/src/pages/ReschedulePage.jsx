@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { currentBooking, availableSlots } from "../utils/mock-data.js";
+import { useState, useEffect } from "react";
 import { getDraftReply } from "../utils/ai.js";
 import { getRecommendedSlots } from "../utils/slot.js";
+import { getMyBookings, getAvailableSlots, addRescheduleRequests } from "../utils/api.js";
 
 function ReschedulePage() {
     const [message, setMessage] = useState('');
@@ -11,6 +11,26 @@ function ReschedulePage() {
     const [draftReply, setDraftReply] = useState('');
     const [selectedSlot, setSelectedSlot] = useState('');
     const [submitted, setSubmitted] = useState(false);
+    const [booking, setBooking] = useState(null);
+    const [timeSlots, setTimeSlots] = useState([]);
+
+    useEffect(() => {
+        async function fetchData() {
+            const bookingResult = await getMyBookings();
+            const firstBooking = bookingResult.data[0];
+            if (!firstBooking) {
+                return;
+            }
+            setBooking(firstBooking);
+
+            const slotResult = await getAvailableSlots(firstBooking.sessionType);
+            setTimeSlots(slotResult.data.filter((slot) => slot.id !== firstBooking.slotId));
+        }
+
+        fetchData();
+    }, []);
+
+    const slotLabels = timeSlots.map((slot) => slot.label);
     
     async function onSubmitHandler(event) {
         event.preventDefault();
@@ -22,7 +42,7 @@ function ReschedulePage() {
         setSubmitted(false);
 
         try {
-            const result = await getDraftReply({ message, slots: availableSlots });
+            const result = await getDraftReply({ message, slots: slotLabels });
 
             if (result.error) {
                 setErrorMessage('Gagal menganalisis pesan. Coba lagi nanti.');
@@ -37,26 +57,39 @@ function ReschedulePage() {
         }
     }
     
-    function onAjukanHandler() {
-        console.log('Request reschedule:', {
-            bookingId: currentBooking.id,
+    async function onAjukanHandler() {
+        setErrorMessage('');
+        const slot = timeSlots.find((item) => item.label === selectedSlot);
+
+        const result = await addRescheduleRequests({
+            bookingId: booking.id,
+            requestedSlotId: slot.id,
             message,
-            selectedSlot,
         });
+
+        if (result.error) {
+            setErrorMessage(result.message);
+            return;
+        }
+
         setSubmitted(true);
     }
 
     const recommendation = analysis && analysis.intent === 'reschedule'
-    ? getRecommendedSlots(availableSlots, analysis.preferred_day, analysis.preferred_period)
+    ? getRecommendedSlots(slotLabels, analysis.preferred_day, analysis.preferred_period)
     : null;
 
     return (
         <section>
             <h2>Ajukan Reschedule</h2>
 
-            <p>
-                Booking kamu sekarang: <strong>{currentBooking.sessionType}</strong>, {currentBooking.schedule}
-            </p>
+            {booking ? (
+                <p>
+                    Booking kamu sekarang: <strong>{booking.sessionType}</strong>, {booking.schedule}
+                </p>
+            ) : (
+                <p>Kamu belum punya booking aktif.</p>
+            )}
 
             <form onSubmit={onSubmitHandler}>
                 <label htmlFor="message">Pesan ke admin</label>
@@ -69,7 +102,7 @@ function ReschedulePage() {
                 onChange={(event) => setMessage(event.target.value)}
                 />
                 <br />
-                <button type="submit" disabled={loading || !message}>
+                <button type="submit" disabled={loading || !message || !booking}>
                     {loading ? 'Memproses...' : 'Kirim'}
                 </button>
             </form>
