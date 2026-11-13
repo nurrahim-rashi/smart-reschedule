@@ -1,6 +1,6 @@
 import RescheduleRequestsRepository from "./repository.js";
 import UsersRepository from "../users/repository.js";
-import { validateRequestPayload, validateReviewPayload, validateRequestQuery } from "./validator.js";
+import { validateRequestPayload, validateReviewPayload, validateRequestQuery, validateRequestParams } from "./validator.js";
 import { InvariantError, NotFoundError } from "../../exceptions/index.js";
 import { verifyAdmin } from "../../security/authorization.js";
 import { getDraftReply } from "../../ai/ai-client.js";
@@ -121,10 +121,11 @@ export const getRequestsHandler = async (request) => {
 
 export const approveRequestHandler = async (request) => {
     verifyAdmin(request.auth.credentials);
+    const { id } = validateRequestParams(request.params);
     const { adminNote } = validateReviewPayload(request.payload);
 
     await RescheduleRequestsRepository.approveRequest({
-        requestId: Number(request.params.id),
+        requestId: id,
         adminId: request.auth.credentials.id,
         adminNote,
     });
@@ -137,10 +138,11 @@ export const approveRequestHandler = async (request) => {
 
 export const rejectRequestHandler = async (request) => {
     verifyAdmin(request.auth.credentials);
+    const { id } = validateRequestParams(request.params);
     const { adminNote } = validateReviewPayload(request.payload);
 
     await RescheduleRequestsRepository.rejectRequest({
-        requestId: Number(request.params.id),
+        requestId: id,
         adminId: request.auth.credentials.id,
         adminNote,
     });
