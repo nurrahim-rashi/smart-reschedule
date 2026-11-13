@@ -1,8 +1,8 @@
 import { useNavigate } from 'react-router-dom';
-import { getAccessToken, removeAccessToken, getUserLogged } from '../utils/api.js';
+import { getAccessToken, getUserLogged } from '../utils/api.js';
 import { useEffect, useState } from 'react';
 
-function HomePage() {
+function HomePage({ logout }) {
     const navigate = useNavigate();
     const isLoggedIn = Boolean(getAccessToken());
     const [user, setUser] = useState(null);
@@ -21,7 +21,7 @@ function HomePage() {
     }, [isLoggedIn]);
 
     function onLogoutHandler() {
-        removeAccessToken();
+        logout();
         navigate('/login');
     }
 
