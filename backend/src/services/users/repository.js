@@ -42,6 +42,11 @@ class UsersRepository {
         }
 
         const { id, role, password_hash: passwordHash } = result.rows[0];
+        
+        if (!passwordHash) {
+            return null;
+        }
+        
         const isPasswordMatch = await bcrypt.compare(password, passwordHash);
 
         if (!isPasswordMatch) {

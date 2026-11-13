@@ -15,6 +15,10 @@ const requestQuerySchema = Joi.object({
     status: Joi.string().valid('pending', 'approved', 'rejected'),
 });
 
+const requestParamsSchema = Joi.object({
+    id: Joi.number().integer().positive().required(),
+});
+
 const validate = (schema, payload) => {
     const { error, value } = schema.validate(payload ?? {});
 
@@ -28,3 +32,4 @@ const validate = (schema, payload) => {
 export const validateRequestPayload = (payload) => validate(requestPayloadSchema, payload);
 export const validateReviewPayload = (payload) => validate(reviewPayloadSchema, payload);
 export const validateRequestQuery = (query) => validate(requestQuerySchema, query);
+export const validateRequestParams = (params) => validate(requestParamsSchema, params);
