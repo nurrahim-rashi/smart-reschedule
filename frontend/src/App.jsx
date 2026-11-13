@@ -73,7 +73,7 @@ function App() {
       </header>
       <main>
         <Routes>
-          <Route path="/" element={<HomePage logout={onLogout} />} />
+          <Route path="/" element={<HomePage name={authedUser.name} logout={onLogout} />} />
           <Route path="/reschedule" element={<ReschedulePage />} />
           <Route path="/requests" element={<RequestStatusPage />} />
         </Routes>
