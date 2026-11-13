@@ -62,4 +62,15 @@ async function getUserLogged() {
     return { error: false, data: responseJson.data.user };
 }
 
-export { register, login, putAccessToken, getAccessToken, removeAccessToken, getUserLogged };
+async function getMyRescheduleRequests() {
+    const response = await fetchWithToken(`${BASE_URL}/reschedule-requests/me`);
+    const responseJson = await response.json();
+
+    if (responseJson.status !== 'success') {
+        return { error: true, data: [] };
+    }
+
+    return { error: false, data: responseJson.data.rescheduleRequests };
+}
+
+export { register, login, putAccessToken, getAccessToken, removeAccessToken, getUserLogged, getMyRescheduleRequests };

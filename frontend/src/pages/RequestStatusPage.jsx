@@ -1,4 +1,5 @@
-import { rescheduleRequests } from "../utils/mock-data.js";
+import { useState, useEffect } from "react";
+import { getMyRescheduleRequests } from "../utils/api.js";
 
 const statusLabels = {
     pending: 'Menunggu persetujuan admin',
@@ -7,6 +8,17 @@ const statusLabels = {
 };
 
 function RequestStatusPage() {
+    const [rescheduleRequests, setRescheduleRequests] = useState([]);
+
+    useEffect(() => {
+        async function fetchRequests() {
+            const { data } = await getMyRescheduleRequests();
+            setRescheduleRequests(data); 
+        }
+
+        fetchRequests();
+    }, []);
+    
     return (
         <section>
             <h2>Status Request Reschedule</h2>
