@@ -73,4 +73,41 @@ async function getMyRescheduleRequests() {
     return { error: false, data: responseJson.data.rescheduleRequests };
 }
 
-export { register, login, putAccessToken, getAccessToken, removeAccessToken, getUserLogged, getMyRescheduleRequests };
+async function getMyBookings() {
+    const response = await fetchWithToken(`${BASE_URL}/bookings/me`);
+    const responseJson = await response.json();
+
+    if (responseJson.status !== 'success') {
+        return { error: true, data: [] };
+    }
+
+    return { error: false, data: responseJson.data.bookings };
+}
+
+async function getAvailableSlots(sessionType) {
+    const response = await fetchWithToken(`${BASE_URL}/time-slots/available?sessionType=${sessionType}`);
+    const responseJson = await response.json();
+
+    if (responseJson.status !== 'success') {
+        return { error: true, data: [] };
+    }
+
+    return { error: false, data: responseJson.data.timeSlots };
+}
+
+async function addRescheduleRequests({ bookingId, requestedSlotId, message }) {
+    const response = await fetchWithToken(`${BASE_URL}/reschedule-requests`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookingId, requestedSlotId, message }),
+    });
+    const responseJson = await response.json();
+
+    if (responseJson.status !== 'success') {
+        return { error: true, message: responseJson.message };
+    }
+
+    return { error: false, data: responseJson.data };
+}
+
+export { register, login, putAccessToken, getAccessToken, removeAccessToken, getUserLogged, getMyRescheduleRequests, getMyBookings, getAvailableSlots, addRescheduleRequests };
