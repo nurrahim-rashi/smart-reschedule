@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { getMyRescheduleRequests } from "../utils/api.js";
+import { showFormattedDate } from "../utils/date.js";
 
 const statusLabels = {
     pending: 'Menunggu persetujuan admin',
@@ -35,7 +36,7 @@ function RequestStatusPage() {
                             <p>Pesan: {request.message}</p>
                             <p>Status: {statusLabels [request.status]}</p>
                             {request.adminNote && <p>Catatan admin: {request.adminNote}</p>}
-                            <p>Diajukan: {request.createdAt}</p>
+                            <p>Diajukan: {showFormattedDate(request.createdAt)}</p>
                         </li>
                     ))}
                 </ul>
