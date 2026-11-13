@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { login } from '../utils/api.js';
 
 function LoginPage({ loginSuccess }) {
@@ -41,6 +41,9 @@ function LoginPage({ loginSuccess }) {
                 <button type="submit">Masuk</button>
             </form>
             {message && <p>{message}</p>}
+            <p>
+                Belum punya akun? <Link to="/register">Daftar di sini</Link>
+            </p>
         </section>
     );
 }
