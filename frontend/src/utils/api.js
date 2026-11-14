@@ -121,11 +121,11 @@ async function getRescheduleRequests() {
     return { error: false, data: responseJson.data.rescheduleRequests};
 }
 
-async function approveRescheduleRequest(id) {
+async function approveRescheduleRequest(id, adminNote) {
     const response = await fetchWithToken(`${BASE_URL}/reschedule-requests/${id}/approve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}),
+        body: JSON.stringify({ adminNote }),
     });
     const responseJson = await response.json();
 
@@ -136,11 +136,11 @@ async function approveRescheduleRequest(id) {
     return { error: false };
 }
 
-async function rejectRescheduleRequest(id) {
+async function rejectRescheduleRequest(id, adminNote) {
     const response = await fetchWithToken(`${BASE_URL}/reschedule-requests/${id}/reject`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}),
+        body: JSON.stringify({ adminNote }),
     });
     const responseJson = await response.json();
 

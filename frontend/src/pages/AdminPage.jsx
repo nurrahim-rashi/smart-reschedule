@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { getRescheduleRequests, approveRescheduleRequest, rejectRescheduleRequest } from "../utils/api.js";
-import { showFormattedDate } from "../utils/date.js";
+import RequestItem from "../components/RequestItem.jsx";
 
 function AdminPage() {
     const [rescheduleRequests, setRescheduleRequests] = useState([]);
@@ -18,9 +18,9 @@ function AdminPage() {
     function removeRequest(id) {
         setRescheduleRequests(rescheduleRequests.filter((request) => request.id !== id));
     }
-    async function onApproveHandler(id) {
+    async function onApproveHandler(id, adminNote) {
         setErrorMessage('');
-        const result = await approveRescheduleRequest(id);
+        const result = await approveRescheduleRequest(id, adminNote);
 
         if (result.error) {
             setErrorMessage(result.message);
@@ -30,9 +30,9 @@ function AdminPage() {
         removeRequest(id);
     }
 
-    async function onRejectHandler(id) {
+    async function onRejectHandler(id, adminNote) {
         setErrorMessage('');
-        const result = await rejectRescheduleRequest(id);
+        const result = await rejectRescheduleRequest(id, adminNote);
 
         if (result.error) {
             setErrorMessage(result.message);
@@ -53,23 +53,12 @@ function AdminPage() {
             ) : (
                 <ul>
                     {rescheduleRequests.map((request) => (
-                        <li key={request.id}>
-                            <p>
-                                <strong>{request.customer.name}</strong>, {request.sessionType}: {request.oldSchedule} → {request.newSchedule}
-                            </p>
-                            <p>Pesan: {request.message}</p>
-                            <p>Diajukan: {showFormattedDate(request.createdAt)}</p>
-
-                            {request.aiAnalysis && <p>Analisis AI: {request.aiAnalysis.intent}</p>}
-                            {request.draftReply && <p>Draft balasan: {request.draftReply.text}</p>}
-
-                            <button type="button" onClick={() => onApproveHandler(request.id)}>
-                                Setujui
-                            </button>
-                            <button type="button" onClick={() => onRejectHandler(request.id)}>
-                                Tolak
-                            </button>
-                        </li>
+                        <RequestItem
+                        key={request.id}
+                        request={request}
+                        onApprove={onApproveHandler}
+                        onReject={onRejectHandler}
+                        />
                     ))}
                 </ul>
             )}
