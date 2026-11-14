@@ -4,13 +4,10 @@ import RegisterPage from "./pages/RegisterPage.jsx";
 import HomePage from "./pages/HomePage.jsx";
 import ReschedulePage from "./pages/ReschedulePage.jsx";
 import RequestStatusPage from "./pages/RequestStatusPage.jsx";
+import AdminPage from "./pages/AdminPage.jsx";
 import Navigation from "./components/Navigation.jsx";
 import { useState, useEffect } from "react";
-import {
-  getUserLogged,
-  putAccessToken,
-  removeAccessToken,
-} from "./utils/api.js";
+import { getUserLogged, putAccessToken, removeAccessToken } from "./utils/api.js";
 
 function App() {
   const [authedUser, setAuthedUser] = useState(null);
@@ -69,13 +66,14 @@ function App() {
     <div>
       <header>
         <h1>Gymnasyum Smart Reschedule</h1>
-        <Navigation />
+        <Navigation isAdmin={authedUser.role === 'admin'} />
       </header>
       <main>
         <Routes>
           <Route path="/" element={<HomePage name={authedUser.name} logout={onLogout} />} />
           <Route path="/reschedule" element={<ReschedulePage />} />
           <Route path="/requests" element={<RequestStatusPage />} />
+          {authedUser.role === 'admin' && <Route path="/admin" element={<AdminPage />} />}
         </Routes>
       </main>
     </div>
