@@ -110,4 +110,45 @@ async function addRescheduleRequests({ bookingId, requestedSlotId, message }) {
     return { error: false, data: responseJson.data };
 }
 
-export { register, login, putAccessToken, getAccessToken, removeAccessToken, getUserLogged, getMyRescheduleRequests, getMyBookings, getAvailableSlots, addRescheduleRequests };
+async function getRescheduleRequests() {
+    const response = await fetchWithToken(`${BASE_URL}/reschedule-requests?status=pending`);
+    const responseJson = await response.json();
+
+    if (responseJson.status !== 'success') {
+        return { error: true, data: [] };
+    }
+
+    return { error: false, data: responseJson.data.rescheduleRequests};
+}
+
+async function approveRescheduleRequest(id) {
+    const response = await fetchWithToken(`${BASE_URL}/reschedule-requests/${id}/approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+    });
+    const responseJson = await response.json();
+
+    if (responseJson.status !== 'success') {
+        return { error: true, message: responseJson.message }; 
+    }
+
+    return { error: false };
+}
+
+async function rejectRescheduleRequest(id) {
+    const response = await fetchWithToken(`${BASE_URL}/reschedule-requests/${id}/reject`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+    });
+    const responseJson = await response.json();
+
+    if (responseJson.status !== 'success') {
+        return { error: true, message: responseJson.message }; 
+    }
+
+    return { error: false };
+}
+
+export { register, login, putAccessToken, getAccessToken, removeAccessToken, getUserLogged, getMyRescheduleRequests, getMyBookings, getAvailableSlots, addRescheduleRequests, getRescheduleRequests, approveRescheduleRequest, rejectRescheduleRequest };
