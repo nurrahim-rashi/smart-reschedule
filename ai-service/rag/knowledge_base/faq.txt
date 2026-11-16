@@ -1,0 +1,144 @@
+[PROFIL GYMNASYUM]
+
+Gymnasyum adalah pusat kebugaran yang menyediakan berbagai program latihan untuk meningkatkan kesehatan, kebugaran, dan kualitas hidup anggota.
+
+Gymnasyum melayani latihan individu maupun kelas kelompok dengan sistem reservasi jadwal.
+
+
+[LOKASI]
+
+Gymnasyum berlokasi di Jakarta.
+
+Informasi lokasi detail dapat diperoleh melalui admin Gymnasyum.
+
+
+[JAM OPERASIONAL]
+
+Gymnasyum buka setiap hari.
+
+Senin - Minggu
+06:00 - 22:00 WIB
+
+
+[MEMBERSHIP]
+
+Paket Bulanan:
+Rp300.000
+
+Paket 3 Bulan:
+Rp800.000
+
+Paket 6 Bulan:
+Rp1.500.000
+
+Biaya dan promo dapat berubah sewaktu-waktu sesuai kebijakan Gymnasyum.
+
+
+[PEMBAYARAN]
+
+Pembayaran membership dapat dilakukan melalui metode yang disediakan oleh Gymnasyum.
+
+Untuk informasi rekening atau metode pembayaran terbaru, silakan hubungi admin.
+
+
+[BOOKING KELAS]
+
+Setiap anggota dapat melakukan reservasi kelas sesuai slot yang tersedia.
+
+Reservasi dianggap aktif setelah berhasil tercatat di sistem.
+
+
+[RESCHEDULE]
+
+Reschedule adalah proses pemindahan jadwal latihan ke waktu lain.
+
+Permintaan reschedule harus diajukan maksimal H-1 sebelum jadwal latihan.
+
+Persetujuan reschedule bergantung pada ketersediaan slot.
+
+Jika tidak ada slot yang tersedia, admin akan membantu mencarikan alternatif jadwal.
+
+
+[PEMBATALAN]
+
+Anggota dapat mengajukan pembatalan sesi latihan.
+
+Pembatalan dilakukan melalui admin atau fitur yang tersedia pada aplikasi.
+
+Kebijakan pengembalian dana mengikuti aturan Gymnasyum yang berlaku.
+
+
+[KETERLAMBATAN]
+
+Anggota disarankan hadir minimal 10 menit sebelum sesi dimulai.
+
+Keterlambatan dapat mengurangi durasi sesi latihan.
+
+
+[KETIDAKHADIRAN]
+
+Jika anggota tidak hadir tanpa pemberitahuan sebelumnya, sesi dapat dianggap hangus sesuai kebijakan yang berlaku.
+
+
+[PERSONAL TRAINER]
+
+Gymnasyum menyediakan layanan personal trainer.
+
+Ketersediaan trainer bergantung pada jadwal dan kapasitas yang tersedia.
+
+Informasi lebih lanjut dapat ditanyakan kepada admin.
+
+
+[KELAS YANG TERSEDIA]
+
+Contoh kelas yang tersedia:
+
+- Yoga
+- Pilates
+- Strength Training
+- Functional Training
+- Cardio Training
+
+Ketersediaan kelas dapat berubah sesuai jadwal operasional.
+
+
+[FASILITAS]
+
+Gymnasyum menyediakan fasilitas:
+
+- Area latihan
+- Ruang kelas
+- Loker
+- Toilet
+- Ruang ganti
+
+Ketersediaan fasilitas dapat berbeda pada tiap lokasi.
+
+
+[KEAMANAN]
+
+Anggota bertanggung jawab menjaga barang pribadi selama berada di area Gymnasyum.
+
+Disarankan menggunakan loker yang tersedia.
+
+
+[ANAK DAN LANSIA]
+
+Ketersediaan program khusus anak atau lansia bergantung pada jadwal yang sedang berjalan.
+
+Silakan hubungi admin untuk informasi terbaru.
+
+
+[PROMO]
+
+Informasi promo, diskon, dan program khusus hanya diberikan melalui pengumuman resmi Gymnasyum atau admin.
+
+
+[KONTAK]
+
+Untuk informasi lebih lanjut mengenai jadwal, membership, pembatalan, maupun reschedule, silakan hubungi admin Gymnasyum.
+
+
+[PERTANYAAN YANG TIDAK TERSEDIA]
+
+Jika informasi yang dicari tidak terdapat pada knowledge base ini, jawab bahwa informasi tersebut belum tersedia dan sarankan pengguna menghubungi admin Gymnasyum.
