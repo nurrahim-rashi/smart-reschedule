@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 from predictor import predict_intent
 from generator import generate_reply, fallback_reply
 from extractor import extract_preferences
-
+from rag.chat import answer_question
 
 load_dotenv()
 
@@ -79,6 +79,11 @@ class DraftRequest(BaseModel):
     customer_name: str | None = Field(default=None, max_length=100)
     current_schedule: str | None = Field(default=None, max_length=100)
 
+class ChatRequest(BaseModel):
+    question: str = Field(
+        min_length=1
+        max_length=1000
+    )
 
 # =========================
 # HEALTH CHECK
@@ -257,4 +262,16 @@ def draft_reply(request: DraftRequest):
         "draft_reply": draft,
         "source": source,
         "needs_review": source != "gemini"
+    }
+
+@app.post("/chat")
+def chat(request: ChatRequest):
+
+    answer = answer_question(
+        request.question
+    )
+
+    return {
+        "question": request.question,
+        "answer": answer
     }
