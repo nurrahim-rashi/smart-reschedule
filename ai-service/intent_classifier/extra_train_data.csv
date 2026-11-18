@@ -1,0 +1,151 @@
+message,intent
+Kelas yoga hari apa saja ya kak?,schedule_inquiry
+"Kak, besok kelas lansia mulai jam berapa?",schedule_inquiry
+Info jadwal private training minggu ini dong,schedule_inquiry
+Hari Rabu ada kelas pagi nggak?,schedule_inquiry
+Sesi saya minggu depan hari apa ya? lupa nih,schedule_inquiry
+Slot kosong untuk hari Jumat jam berapa aja kak?,schedule_inquiry
+Jam berapa kelas Zumba hari Sabtu?,schedule_inquiry
+Masih tersedia tempat di kelas pilates Selasa pagi?,schedule_inquiry
+"Selamat sore, boleh minta jadwal kelas lansia bulan ini?",schedule_inquiry
+kak jadwal coach Dina hari apa aja,schedule_inquiry
+Apakah besok gym tetap buka seperti biasa?,schedule_inquiry
+Booking saya hari Kamis jam berapa ya?,schedule_inquiry
+Kelas stretching hari Minggu ada ga kak?,schedule_inquiry
+"Tolong dicek, saya punya jadwal apa saja minggu ini?",schedule_inquiry
+Kuota kelas Senin malam masih berapa?,schedule_inquiry
+Sabtu depan ada sesi private yang kosong ga?,schedule_inquiry
+Kelas yoga pagi mulai jam berapa sampai jam berapa?,schedule_inquiry
+"Kak, kalau tanggal merah kelas tetap jalan?",schedule_inquiry
+Hari apa saja ibu-ibu bisa ikut senam pagi?,schedule_inquiry
+Jam buka hari Minggu sampai kapan ya?,schedule_inquiry
+Masih ada slot besok sore ga kak?,schedule_inquiry
+Jadwal terbaru bulan depan sudah ada?,schedule_inquiry
+Kapan sesi berikutnya yang tersedia dengan coach Rudi?,schedule_inquiry
+"Untuk Jumat sore, kelas apa saja yang buka?",schedule_inquiry
+"Kak aku mau cek jadwalku besok, jam berapa?",schedule_inquiry
+Apakah ada sesi malam setelah jam 7?,schedule_inquiry
+Kelas pemula hari apa ya?,schedule_inquiry
+Hari Selasa ada kelas lansia atau tidak?,schedule_inquiry
+Boleh lihat daftar slot kosong minggu ini?,schedule_inquiry
+Biasanya kelas Kamis dimulai jam berapa?,schedule_inquiry
+"Oke kak, yang Rabu jam 9 aja",confirmation
+"Yang kedua ya kak, Jumat pagi",confirmation
+"Siap, Senin sore saya ambil",confirmation
+Saya pilih Selasa jam 5 sore,confirmation
+"Boleh kak, yang itu saja",confirmation
+"Setuju, Kamis jam 10 ya",confirmation
+"Baik kak, jadwal pindahnya sudah oke buat saya",confirmation
+"Fix ya kak, Sabtu jam 7 pagi",confirmation
+"Oke deh, aku ambil slot yang jam 3",confirmation
+"Ya, saya konfirmasi untuk Minggu pagi",confirmation
+Yang pertama aja kak,confirmation
+"Siap kak, saya akan hadir sesuai jadwal baru",confirmation
+"Sudah cocok kak, makasih sudah dicarikan",confirmation
+"Terima kasih kak, saya setuju dengan jadwal Jumat itu",confirmation
+Pilih yang Rabu sore ya,confirmation
+"Oke kak, jadi pindah ke Kamis ya, saya datang",confirmation
+"Ok ditunggu ya kak, nanti saya datang jam 8",confirmation
+"Iya kak benar, saya akan datang",confirmation
+"Hadir kak, besok jam 6 sore",confirmation
+Siap! sampai ketemu hari Senin,confirmation
+"Sip, jadwal Selasa saya terima",confirmation
+"Slot jam 11 aja kak, saya ok",confirmation
+"Iya kak, saya ambil yang itu aja",confirmation
+"Baik, saya konfirmasi sesi hari Sabtu jam 9",confirmation
+"Mantap, jadwal barunya pas banget buat aku",confirmation
+"Oke kak, saya ikut yang Jumat",confirmation
+Setuju kak dengan tanggal dan jamnya,confirmation
+"Yaudah kak, Minggu sore aja nggak apa-apa",confirmation
+Pilihan pertama aku ambil ya,confirmation
+"Dikonfirmasi ya kak, saya hadir",confirmation
+Kak sesi Jumat saya bisa dipindah ke hari Sabtu?,reschedule
+"Saya tidak bisa hadir besok, mohon dijadwalkan ulang ke minggu depan",reschedule
+"Besok aku nggak bisa, bisa diganti hari lain ga kak?",reschedule
+"Mohon maaf kak, jadwal Selasa saya bentrok. Bisa dipindah ke Rabu?",reschedule
+Bisa tolong undur sesi saya satu jam?,reschedule
+"Aku mau pindah jadwal ke malam hari, bisa?",reschedule
+"Saya berhalangan hadir hari ini, boleh digantikan di hari lain?",reschedule
+"Kak, boleh tukar sesi Senin jadi Kamis?",reschedule
+Boleh dimajukan jadwalnya ke jam 7 pagi?,reschedule
+Mau ubah jadwal latihan ke akhir pekan ya kak,reschedule
+"Minggu ini saya sibuk, bisa dijadwal ulang minggu depan?",reschedule
+"Sesi yg tadi pagi kelewat, boleh diganti besok?",reschedule
+"Kak, ada tamu dari luar kota, jadwal besok bisa aku geser ke lusa?",reschedule
+Tolong reschedule sesi Rabu saya ke jam 4 sore,reschedule
+"Maaf, saya telat bangun terus ketinggalan sesi. Bisa dicarikan jadwal pengganti?",reschedule
+Bisa nggak kelasnya aku pindah ke hari yang masih kosong?,reschedule
+Boleh saya minta jadwal lain karena besok ada rapat,reschedule
+Saya ingin memajukan sesi Kamis menjadi Rabu,reschedule
+kak jadwalku tgl 20 bisa diundur ke tgl 22?,reschedule
+Mohon pindahkan sesi pilates saya ke pagi hari,reschedule
+"Aku lagi kurang sehat, sesi besok bisa diganti hari Sabtu aja ga?",reschedule
+Bisakah sesi private saya diundur ke minggu depan karena saya dinas?,reschedule
+"Hari Minggu saya tidak bisa, apa ada slot hari Senin?",reschedule
+Kak mohon dicarikan jadwal baru buat sesi besok ya,reschedule
+"Saya perlu ganti hari latihan, bisa ke Jumat?",reschedule
+"Anak ada ujian, jadi bisa tolong dipindah ke sore?",reschedule
+"Pindah ke jam berapa pun boleh, yang penting bukan pagi",reschedule
+"Dijadwal ulang aja kak, besok saya ga bisa",reschedule
+Boleh nggak sesi saya hari ini diganti besok?,reschedule
+"Kak, kelas Sabtu saya bisa tukar dengan kelas Minggu?",reschedule
+"Sesi besok tolong dibatalkan, tidak perlu diganti hari lain",cancel
+Mohon batalkan booking saya hari Kamis,cancel
+"Saya tidak jadi datang, cancel aja ya kak",cancel
+"Aku mau stop dulu latihan sebulan, tolong dihapus jadwalku",cancel
+"Kak tolong dibatalkan sesi Jumat, nggak usah dijadwal ulang",cancel
+"Maaf kak, saya batal ikut kelas besok",cancel
+"Saya mau berhenti jadi member, mohon info caranya",cancel
+"Hapus aja jadwal minggu depan kak, aku nggak jadi",cancel
+"Sesi hari ini dibatalin ya, aku nggak bisa dan nggak mau diganti",cancel
+"Tidak usah dicarikan jadwal pengganti, batalkan saja",cancel
+"Mohon dibatalkan, saya tidak akan ikut kelas lagi",cancel
+Kak aku cancel booking yoga Rabu,cancel
+"Saya sudah tidak berminat melanjutkan paket ini, tolong dibatalkan",cancel
+"Untuk besok skip dulu ya kak, jangan dijadwalkan lagi",cancel
+"Batal ya kak, makasih",cancel
+Tolong cancel sesi private saya tanggal 25,cancel
+Kami sekeluarga batal ikut kelas lansia minggu ini,cancel
+Saya membatalkan seluruh jadwal bulan ini karena pindah kota,cancel
+"Sesi besok nggak usah ya kak, nggak jadi",cancel
+Mohon hentikan jadwal rutin saya setiap Selasa,cancel
+"Kak batalin aja booking aku, nggak usah diundur",cancel
+"Maaf banget, saya mau membatalkan sesi Sabtu",cancel
+"Gak jadi ikut kak, jangan dijadwalin ulang ya",cancel
+Tolong dihapus aja reservasi atas nama saya,cancel
+"Aku cabut dari kelas Kamis ya kak, tolong dicoret",cancel
+"Mohon dibatalkan, tidak perlu diganti, terima kasih",cancel
+Booking besok cancel ya kak,cancel
+Saya tidak jadi mengikuti sesi trial,cancel
+"Berhenti dulu ya kak, jadwal Jumat tolong dihapus",cancel
+"Kak, tolong batalkan pemesanan sesi saya dan jangan cari pengganti",cancel
+"Kak, ada loker buat simpan barang ga?",other
+Bagaimana cara ganti nomor HP di akun?,other
+Berapa harga paket private training 8 sesi?,other
+Apakah ada program khusus untuk penderita osteoporosis?,other
+Handuk disediakan atau bawa sendiri?,other
+"Terima kasih ya kak, pelayanannya ramah",other
+Boleh bayar pakai QRIS?,other
+Pelatihnya sudah bersertifikat belum?,other
+"Kak kemarin musiknya terlalu keras, mohon diatur",other
+Ada tempat sholat di gym?,other
+Baju apa yang nyaman dipakai buat kelas lansia?,other
+"Mau tanya, apakah paket member bisa dipakai berdua?",other
+"Selamat pagi, semoga harinya menyenangkan",other
+Apakah instrukturnya bisa bahasa Inggris?,other
+"Saya mau kasih saran, lantai kelas yoga agak licin",other
+Gimana cara upgrade ke paket premium?,other
+"Makasih banyak kak, badan saya makin enakan",other
+"Kak, di mana lokasi gymnasyum tepatnya?",other
+Boleh minta invoice pembayaran bulan lalu?,other
+Apa bedanya kelas private dan kelas grup?,other
+"Maaf kak, aplikasinya error pas saya login",other
+Katanya ada promo akhir tahun ya?,other
+Boleh bawa anak kecil ke area gym?,other
+Selamat ulang tahun gymnasyum!,other
+Apakah aman olahraga untuk ibu hamil?,other
+"Saya lupa password, bagaimana resetnya?",other
+Ada galon air minum gratis di sana ga?,other
+"Kak, kemarin sepatu saya tertukar di rak",other
+Wah kelasnya seru banget kemarin!,other
+Ada cabang lain selain yang sekarang?,other
