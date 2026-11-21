@@ -1,8 +1,51 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
-function MemberPage({ name }) {
+import {
+  getMyBookings,
+  getMyRescheduleRequests,
+} from "../utils/api.js";
 
-    console.log("MEMBER PAGE");
+function MemberPage({ name }) {
+  const [bookings, setBookings] =
+    useState([]);
+
+  const [requests, setRequests] =
+    useState([]);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      const [bookingsResult, requestsResult] =
+        await Promise.all([
+          getMyBookings(),
+          getMyRescheduleRequests(),
+        ]);
+
+      setBookings(bookingsResult.data);
+      setRequests(requestsResult.data);
+      setLoading(false);
+    }
+
+    fetchData();
+  }, []);
+
+  const pendingRequests = requests.filter(
+    (request) =>
+      request.status === "pending"
+  );
+
+  // Jadwal yang sedang diajukan pindah, dicocokkan dari jadwal lamanya
+  const pendingSchedules = new Set(
+    pendingRequests.map(
+      (request) => request.oldSchedule
+    )
+  );
+
+  const nextBooking = bookings[0];
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
       {/* Header */}
@@ -17,96 +60,158 @@ function MemberPage({ name }) {
         </p>
       </div>
 
-      {/* Welcome Card */}
+      {/* Statistik */}
 
-      <div className="hero bg-base-100 rounded-2xl shadow-lg">
-        <div className="hero-content text-center py-10">
-          <div>
-            <h2 className="text-3xl font-bold">
-              Smart Reschedule Assistant
-            </h2>
+      <div className="stats stats-vertical md:stats-horizontal shadow w-full mb-8">
+        <div className="stat">
+          <div className="stat-title">
+            Jadwal Aktif
+          </div>
 
-            <p className="py-4 text-gray-500">
-              Kelola perubahan jadwal latihan
-              Anda dengan lebih mudah menggunakan
-              bantuan Artificial Intelligence.
-            </p>
+          <div className="stat-value text-success">
+            {loading ? "-" : bookings.length}
+          </div>
 
-            <div className="flex flex-col md:flex-row justify-center gap-4">
-              <Link
-                to="/booking"
-                className="btn btn-success"
-              >
-                Booking Jadwal
-              </Link>
+          <div className="stat-desc">
+            Sesi yang akan datang
+          </div>
+        </div>
 
-              <Link
-                to="/reschedule"
-                className="btn btn-outline btn-success"
-              >
-                Ajukan Reschedule
-              </Link>
+        <div className="stat">
+          <div className="stat-title">
+            Request Menunggu
+          </div>
 
-              <Link
-                to="/requests"
-                className="btn btn-outline btn-success"
-              >
-                Lihat Status Request
-              </Link>
-            </div>
+          <div className="stat-value text-warning">
+            {loading ? "-" : pendingRequests.length}
+          </div>
+
+          <div className="stat-desc">
+            Menunggu persetujuan admin
+          </div>
+        </div>
+
+        <div className="stat">
+          <div className="stat-title">
+            Sesi Berikutnya
+          </div>
+
+          <div className="stat-value text-primary text-2xl">
+            {nextBooking
+              ? nextBooking.schedule
+              : "-"}
+          </div>
+
+          <div className="stat-desc">
+            Datang 10 menit sebelum mulai
           </div>
         </div>
       </div>
 
-      {/* Statistik */}
+      {/* Jadwal Saya */}
 
-      <div className="stats shadow w-full mt-8">
-        <div className="stat">
-          <div className="stat-title">
-            Smart Assistant
+      <div className="card bg-base-100 shadow-lg mb-8">
+        <div className="card-body">
+          <div className="flex justify-between items-center">
+            <h2 className="card-title">
+              🗓️ Jadwal Saya
+            </h2>
+
+            {bookings.length > 0 && (
+              <Link
+                to="/booking"
+                className="btn btn-sm btn-outline btn-success"
+              >
+                + Tambah Jadwal
+              </Link>
+            )}
           </div>
 
-          <div className="stat-value text-success">
-            AI
-          </div>
+          {loading && (
+            <div className="flex justify-center py-6">
+              <span className="loading loading-spinner loading-md text-success"></span>
+            </div>
+          )}
 
-          <div className="stat-desc">
-            Aktif
-          </div>
-        </div>
+          {!loading && bookings.length === 0 && (
+            <div className="text-center py-6">
+              <p className="text-gray-500 mb-4">
+                Anda belum punya jadwal latihan.
+              </p>
 
-        <div className="stat">
-          <div className="stat-title">
-            Status Sistem
-          </div>
+              <Link
+                to="/booking"
+                className="btn btn-success"
+              >
+                Booking Jadwal Pertama
+              </Link>
+            </div>
+          )}
 
-          <div className="stat-value text-primary">
-            Online
-          </div>
+          {!loading && bookings.length > 0 && (
+            <ul className="divide-y divide-base-200">
+              {bookings.map((booking, index) => (
+                <li
+                  key={booking.id}
+                  className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 py-3"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-lg font-semibold">
+                      {booking.schedule}
+                    </span>
 
-          <div className="stat-desc">
-            GymSync Ready
-          </div>
-        </div>
+                    {index === 0 && (
+                      <span className="badge badge-success">
+                        Berikutnya
+                      </span>
+                    )}
 
-        <div className="stat">
-          <div className="stat-title">
-            Role
-          </div>
+                    {pendingSchedules.has(booking.schedule) && (
+                      <span className="badge badge-warning">
+                        Menunggu reschedule
+                      </span>
+                    )}
+                  </div>
 
-          <div className="stat-value text-secondary">
-            Member
-          </div>
-
-          <div className="stat-desc">
-            Customer Area
-          </div>
+                  <Link
+                    to="/reschedule"
+                    className="btn btn-sm btn-ghost text-success"
+                  >
+                    Reschedule
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
 
       {/* Features */}
 
-      <div className="grid md:grid-cols-2 gap-6 mt-8">
+      <div className="grid md:grid-cols-3 gap-6">
+        <div className="card bg-base-100 shadow-lg">
+          <div className="card-body">
+            <h2 className="card-title">
+              📆 Booking Jadwal
+            </h2>
+
+            <p>
+              Pilih jadwal latihan baru dari
+              slot yang tersedia setiap hari
+              pukul 07:00 - 21:00.
+            </p>
+
+            <div className="card-actions justify-end">
+              <Link
+                to="/booking"
+                className="btn btn-success"
+              >
+                Mulai
+              </Link>
+            </div>
+          </div>
+        </div>
+
         <div className="card bg-base-100 shadow-lg">
           <div className="card-body">
             <h2 className="card-title">
