@@ -1,4 +1,5 @@
-const BASE_URL = 'http://localhost:5000';
+// Saat deploy, isi VITE_API_URL dengan URL backend (lihat .env.example)
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 async function register({ name, email, password }) {
     const response = await fetch(`${BASE_URL}/users`, {

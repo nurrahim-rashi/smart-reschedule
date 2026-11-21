@@ -120,6 +120,7 @@ AI evaluations (these need the trained model and, for drafts, a Gemini API key):
 
 - [docs/User Guide - DB15-G006.pdf](<docs/User Guide - DB15-G006.pdf>): product user guide for members and admins, with screenshots
 - [docs/PPT Smart Reschedule Assistant (English).pdf](<docs/PPT Smart Reschedule Assistant (English).pdf>): presentation slides
+- [docs/DEPLOY.md](docs/DEPLOY.md): deployment to Hugging Face Spaces, Railway, and Vercel (Indonesian)
 - [docs/API.md](docs/API.md): backend and AI service endpoints (Indonesian)
 - [docs/DATABASE.md](docs/DATABASE.md): database schema and slot rules (Indonesian)
 - [docs/AI.md](docs/AI.md): intent model, extraction, prompts, guardrails, and evaluation (Indonesian)

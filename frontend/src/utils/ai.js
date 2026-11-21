@@ -1,4 +1,5 @@
-const AI_BASE_URL = 'http://127.0.0.1:8000';
+// Saat deploy, isi VITE_AI_URL dengan URL AI service (lihat .env.example)
+const AI_BASE_URL = import.meta.env.VITE_AI_URL || 'http://127.0.0.1:8000';
 
 async function analyzeMessage(message) {
     const response = await fetch(`${AI_BASE_URL}/analyze-message`, {
