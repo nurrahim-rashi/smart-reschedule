@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from predictor import predict_intent
+from intent import classify_intent
 from generator import generate_reply, fallback_reply, generate_decision_reply
 from extractor import extract_preferences
 from rag.chat import answer_question
@@ -198,7 +199,7 @@ def generate(request: ReplyRequest):
 @app.post("/analyze-message")
 def analyze_message(data: Message):
 
-    intent, confidence = predict_intent(
+    intent, confidence, intent_source = classify_intent(
         data.message
     )
 
@@ -214,6 +215,7 @@ def analyze_message(data: Message):
         "message": data.message,
         "intent": intent,
         "confidence": confidence,
+        "intent_source": intent_source,
         "preferred_day": preferred_day,
         "preferred_period": preferred_period,
         "preferred_time": preferred_time
@@ -227,7 +229,7 @@ def analyze_message(data: Message):
 @app.post("/draft-reply")
 def draft_reply(request: DraftRequest):
 
-    intent, confidence = predict_intent(
+    intent, confidence, intent_source = classify_intent(
         request.message
     )
 
@@ -267,6 +269,7 @@ def draft_reply(request: DraftRequest):
     return {
         "intent": intent,
         "confidence": confidence,
+        "intent_source": intent_source,
         "preferred_day": preferred_day,
         "preferred_period": preferred_period,
         "preferred_time": preferred_time,

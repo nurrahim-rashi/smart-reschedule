@@ -73,7 +73,7 @@ function RequestStatusPage() {
           Status Request
         </h1>
 
-        <p className="text-gray-500 mt-2">
+        <p className="text-base-content/60 mt-2">
           Pantau perkembangan request
           reschedule Anda.
         </p>
@@ -90,8 +90,10 @@ function RequestStatusPage() {
       {/* Loading */}
 
       {loading && (
-        <div className="flex justify-center py-12">
-          <span className="loading loading-spinner loading-lg text-success"></span>
+        <div className="space-y-4">
+          {[1, 2].map((key) => (
+            <div key={key} className="skeleton h-40 w-full"></div>
+          ))}
         </div>
       )}
 
@@ -130,7 +132,7 @@ function RequestStatusPage() {
                         {request.id}
                       </h2>
 
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-base-content/60">
                         Diajukan pada{" "}
                         {new Date(
                           request.createdAt
@@ -152,7 +154,7 @@ function RequestStatusPage() {
                       Pesan Member
                     </h3>
 
-                    <p className="mt-1">
+                    <p className="mt-1 whitespace-pre-line">
                       {request.message}
                     </p>
                   </div>
@@ -166,7 +168,7 @@ function RequestStatusPage() {
                           Catatan Admin
                         </h3>
 
-                        <p className="mt-1">
+                        <p className="mt-1 whitespace-pre-line">
                           {
                             request.adminNote
                           }

@@ -4,7 +4,7 @@ const { Pool } = pkg;
 
 const TIMEZONE = process.env.APP_TIMEZONE || 'Asia/Jakarta';
 const SLOT_CAPACITY = Number(process.env.SLOT_CAPACITY) || 20;
-const SLOT_DAYS_AHEAD = Number(process.env.SLOT_DAYS_AHEAD) || 14;
+const SLOT_DAYS_AHEAD = Number(process.env.SLOT_DAYS_AHEAD) || 30;
 
 // Jam buka gym: slot pertama 07:00, slot terakhir 20:00 (selesai 21:00)
 const FIRST_SLOT_HOUR = 7;
@@ -48,6 +48,15 @@ class TimeSlotsRepository {
 
         const result = await this.pool.query(query);
         return result.rowCount;
+    }
+
+    async getSlotStartTime(slotId) {
+        const result = await this.pool.query({
+            text: 'SELECT start_time FROM time_slots WHERE id = $1',
+            values: [slotId],
+        });
+
+        return result.rows[0]?.start_time ?? null;
     }
 
     async getAvailableTimeSlots() {

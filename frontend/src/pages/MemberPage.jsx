@@ -47,7 +47,7 @@ function MemberPage({ name }) {
   const nextBooking = bookings[0];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6">
+    <div className="max-w-6xl mx-auto px-4 py-6">
       {/* Header */}
 
       <div className="mb-8">
@@ -55,7 +55,7 @@ function MemberPage({ name }) {
           Dashboard Member
         </h1>
 
-        <p className="text-gray-500 mt-2">
+        <p className="text-base-content/60 mt-2">
           Selamat datang, {name}.
         </p>
       </div>
@@ -128,14 +128,15 @@ function MemberPage({ name }) {
           </div>
 
           {loading && (
-            <div className="flex justify-center py-6">
-              <span className="loading loading-spinner loading-md text-success"></span>
+            <div className="space-y-3 py-3">
+              <div className="skeleton h-6 w-2/3"></div>
+              <div className="skeleton h-6 w-1/2"></div>
             </div>
           )}
 
           {!loading && bookings.length === 0 && (
             <div className="text-center py-6">
-              <p className="text-gray-500 mb-4">
+              <p className="text-base-content/60 mb-4">
                 Anda belum punya jadwal latihan.
               </p>
 
@@ -192,7 +193,7 @@ function MemberPage({ name }) {
         <div className="card bg-base-100 shadow-lg">
           <div className="card-body">
             <h2 className="card-title">
-              📆 Booking Jadwal
+              🎟️ Booking Jadwal
             </h2>
 
             <p>

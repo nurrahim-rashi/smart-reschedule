@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 import SlotPicker from "../components/SlotPicker.jsx";
+import Toast from "../components/Toast.jsx";
 import {
   getMyBookings,
   getAvailableSlots,
@@ -91,22 +92,21 @@ function BookingPage() {
         Booking Jadwal
       </h1>
 
-      <p className="text-gray-500 mt-2 mb-6">
+      <p className="text-base-content/60 mt-2 mb-6">
         Pilih jadwal latihan. Gym buka setiap hari 07:00 - 21:00,
         tiap slot berdurasi 1 jam.
       </p>
 
-      {errorMessage && (
-        <div className="alert alert-error mb-6">
-          <span>{errorMessage}</span>
-        </div>
-      )}
+      <Toast
+        message={errorMessage}
+        type="error"
+        onClose={() => setErrorMessage("")}
+      />
 
-      {successMessage && (
-        <div className="alert alert-success mb-6">
-          <span>{successMessage}</span>
-        </div>
-      )}
+      <Toast
+        message={successMessage}
+        onClose={() => setSuccessMessage("")}
+      />
 
       {bookings.length > 0 && (
         <div className="card bg-base-100 shadow-lg mb-6">
@@ -149,7 +149,14 @@ function BookingPage() {
           <h2 className="card-title">Slot Tersedia</h2>
 
           {initializing ? (
-            <span className="loading loading-spinner loading-md"></span>
+            <div className="space-y-4">
+              <div className="skeleton h-8 w-full"></div>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-2">
+                {Array.from({ length: 14 }, (_, index) => (
+                  <div key={index} className="skeleton h-14"></div>
+                ))}
+              </div>
+            </div>
           ) : (
             <SlotPicker
               slots={selectableSlots}

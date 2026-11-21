@@ -5,15 +5,29 @@ import re
 # PATTERNS
 # =========================
 
+# Angka yang ditulis dengan kata, mis. "dua minggu lagi"
+WORD_NUMBERS = {
+    "se": 1,
+    "satu": 1,
+    "dua": 2,
+    "tiga": 3,
+    "empat": 4,
+}
+
+# "3 minggu lagi", "seminggu lagi", "5 hari lagi"
+RELATIVE_PATTERN = r"(?:\d+\s*|se|satu\s+|dua\s+|tiga\s+|empat\s+)(?:hari|minggu)\s+lagi"
+
 DAYS = [
+    RELATIVE_PATTERN,
+    r"minggu\s+depan",
     "senin",
     "selasa",
     "rabu",
     "kamis",
     "jumat",
     "sabtu",
-    # "minggu depan/ini/lalu" artinya pekan, bukan hari Minggu
-    r"minggu(?!\s+(?:depan|ini|lalu|kemarin))",
+    # "minggu depan/ini/lalu/lagi" artinya pekan, bukan hari Minggu
+    r"minggu(?!\s+(?:depan|ini|lalu|kemarin|lagi))",
     "hari ini",
     "besok",
     "lusa"
@@ -123,6 +137,29 @@ def find_time(text, target):
     return None
 
 
+def normalize_day(day):
+    """
+    Seragamkan hari relatif supaya mudah dibaca backend.
+
+    "seminggu lagi" -> "1 minggu lagi", "tiga  minggu lagi" -> "3 minggu lagi"
+    """
+
+    if day is None:
+
+        return None
+
+    match = re.fullmatch(r"(\d+|se|satu|dua|tiga|empat)\s*(hari|minggu)\s+lagi", day)
+
+    if match:
+
+        amount, unit = match.groups()
+        number = int(amount) if amount.isdigit() else WORD_NUMBERS[amount]
+
+        return f"{number} {unit} lagi"
+
+    return re.sub(r"\s+", " ", day)
+
+
 # =========================
 # EXTRACT PREFERENCES
 # =========================
@@ -133,7 +170,7 @@ def extract_preferences(text):
 
     target = split_target(text)
 
-    preferred_day = find_preferred(DAYS, text, target)
+    preferred_day = normalize_day(find_preferred(DAYS, text, target))
     preferred_period = find_preferred(PERIODS, text, target)
     preferred_time = find_time(text, target)
 

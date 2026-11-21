@@ -2,6 +2,12 @@ import { useState } from "react";
 import { showFormattedDate } from "../utils/date.js";
 import { generateDecisionDraft } from "../utils/api.js";
 
+const STATUS_BADGES = {
+  pending: { label: "Menunggu Persetujuan", className: "badge-warning" },
+  approved: { label: "Disetujui", className: "badge-success" },
+  rejected: { label: "Ditolak", className: "badge-error" },
+};
+
 const INTENT_LABELS = {
   reschedule: "Reschedule",
   cancel: "Pembatalan",
@@ -31,6 +37,8 @@ function RequestItem({
     useState("");
 
   const analysis = request.aiAnalysis;
+  const isPending = request.status === "pending";
+  const statusBadge = STATUS_BADGES[request.status];
 
   async function onGenerateDraft(decision) {
     setGenerating(decision);
@@ -71,13 +79,13 @@ function RequestItem({
             {request.customer.name}
           </h3>
 
-          <p className="text-gray-500">
+          <p className="text-base-content/60">
             {request.sessionType}
           </p>
         </div>
 
-        <div className="badge badge-warning badge-lg">
-          Menunggu Persetujuan
+        <div className={`badge badge-lg ${statusBadge.className}`}>
+          {statusBadge.label}
         </div>
       </div>
 
@@ -85,7 +93,7 @@ function RequestItem({
 
       <div className="grid md:grid-cols-2 gap-4">
         <div>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-base-content/60">
             Jadwal Lama
           </p>
 
@@ -95,29 +103,29 @@ function RequestItem({
         </div>
 
         <div>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-base-content/60">
             Jadwal Baru
           </p>
 
-          <p className="font-medium text-green-700">
+          <p className="font-medium text-success">
             {request.newSchedule}
           </p>
         </div>
       </div>
 
       <div className="mt-4">
-        <p className="text-sm text-gray-500 mb-1">
+        <p className="text-sm text-base-content/60 mb-1">
           Pesan Member
         </p>
 
-        <div className="bg-base-200 rounded-lg p-3">
+        <div className="bg-base-200 rounded-lg p-3 whitespace-pre-line">
           {request.message}
         </div>
       </div>
 
       {analysis ? (
         <div className="mt-4">
-          <p className="text-sm text-gray-500 mb-1">
+          <p className="text-sm text-base-content/60 mb-1">
             Hasil Analisis AI
           </p>
 
@@ -156,118 +164,141 @@ function RequestItem({
           )}
         </div>
       ) : (
-        <p className="mt-4 text-sm text-gray-500">
+        <p className="mt-4 text-sm text-base-content/60">
           Analisis AI tidak tersedia untuk
           request ini.
         </p>
       )}
 
-      <div className="mt-4">
-        <p className="text-sm text-gray-500 mb-2">
-          Catatan Admin
-        </p>
+      {isPending ? (
+        <div className="mt-4">
+          <p className="text-sm text-base-content/60 mb-2">
+            Catatan Admin
+          </p>
 
-        <div className="flex flex-col md:flex-row gap-2 mb-2">
-          <button
-            type="button"
-            className="btn btn-sm btn-outline btn-success"
-            disabled={generating !== null}
-            onClick={() =>
-              onGenerateDraft("approved")
-            }
-          >
-            {generating === "approved" && (
-              <span className="loading loading-spinner loading-xs"></span>
-            )}
-            Draf AI: Setujui
-          </button>
+          <div className="flex flex-col md:flex-row gap-2 mb-2">
+            <button
+              type="button"
+              className="btn btn-sm btn-outline btn-success"
+              disabled={generating !== null}
+              onClick={() =>
+                onGenerateDraft("approved")
+              }
+            >
+              {generating === "approved" && (
+                <span className="loading loading-spinner loading-xs"></span>
+              )}
+              Draf AI: Setujui
+            </button>
 
-          <input
-            type="text"
-            className="input input-bordered input-sm flex-1"
-            placeholder="Alasan menolak (opsional), mis. slot penuh"
-            value={rejectReason}
+            <input
+              type="text"
+              className="input input-bordered input-sm flex-1"
+              placeholder="Alasan menolak (opsional), mis. slot penuh"
+              value={rejectReason}
+              onChange={(event) =>
+                setRejectReason(
+                  event.target.value
+                )
+              }
+            />
+
+            <button
+              type="button"
+              className="btn btn-sm btn-outline btn-error"
+              disabled={generating !== null}
+              onClick={() =>
+                onGenerateDraft("rejected")
+              }
+            >
+              {generating === "rejected" && (
+                <span className="loading loading-spinner loading-xs"></span>
+              )}
+              Draf AI: Tolak + Alternatif
+            </button>
+          </div>
+
+          {draftError && (
+            <p className="text-sm text-error mb-2">
+              {draftError}
+            </p>
+          )}
+
+          <textarea
+            className="textarea textarea-bordered w-full whitespace-pre-line"
+            rows="6"
+            placeholder="Tulis catatan untuk member, atau buat draf dengan AI di atas..."
+            value={adminNote}
             onChange={(event) =>
-              setRejectReason(
-                event.target.value
-              )
+              setAdminNote(event.target.value)
             }
           />
 
-          <button
-            type="button"
-            className="btn btn-sm btn-outline btn-error"
-            disabled={generating !== null}
-            onClick={() =>
-              onGenerateDraft("rejected")
-            }
-          >
-            {generating === "rejected" && (
-              <span className="loading loading-spinner loading-xs"></span>
-            )}
-            Draf AI: Tolak + Alternatif
-          </button>
+          {draftSource && (
+            <p className="text-xs text-base-content/60 mt-1">
+              {draftSource === "gemini"
+                ? "Draf dibuat AI dan sudah dicek hanya menyebut slot dari database. Silakan edit sebelum mengirim."
+                : "AI sedang tidak tersedia, draf diisi dari template. Silakan edit sebelum mengirim."}
+            </p>
+          )}
         </div>
-
-        {draftError && (
-          <p className="text-sm text-error mb-2">
-            {draftError}
+      ) : (
+        <div className="mt-4">
+          <p className="text-sm text-base-content/60 mb-1">
+            Catatan Admin
           </p>
-        )}
 
-        <textarea
-          className="textarea textarea-bordered w-full whitespace-pre-line"
-          rows="6"
-          placeholder="Tulis catatan untuk member, atau buat draf dengan AI di atas..."
-          value={adminNote}
-          onChange={(event) =>
-            setAdminNote(event.target.value)
-          }
-        />
+          <div className="bg-base-200 rounded-lg p-3 whitespace-pre-line">
+            {request.adminNote || "-"}
+          </div>
+        </div>
+      )}
 
-        {draftSource && (
-          <p className="text-xs text-gray-500 mt-1">
-            {draftSource === "gemini"
-              ? "Draf dibuat AI dan sudah dicek hanya menyebut slot dari database. Silakan edit sebelum mengirim."
-              : "AI sedang tidak tersedia, draf diisi dari template. Silakan edit sebelum mengirim."}
-          </p>
-        )}
-      </div>
-
-      <div className="mt-4 text-sm text-gray-500">
+      <div className="mt-4 text-sm text-base-content/60">
         Diajukan pada{" "}
         {showFormattedDate(
           request.createdAt
         )}
+
+        {request.reviewedAt && (
+          <>
+            {" "}· Diputuskan pada{" "}
+            {showFormattedDate(
+              request.reviewedAt
+            )}
+          </>
+        )}
       </div>
 
-      <div className="flex flex-col md:flex-row gap-3 mt-6">
-        <button
-          type="button"
-          className="btn btn-success flex-1"
-          onClick={() =>
-            onApprove(
-              request.id,
-              adminNote
-            )
-          }
-        >
-          Setujui
-        </button>
+      {isPending && (
+        <div className="flex flex-col md:flex-row gap-3 mt-6">
+          <button
+            type="button"
+            className="btn btn-success flex-1"
+            onClick={() =>
+              onApprove(
+                request.id,
+                adminNote
+              )
+            }
+          >
+            Setujui
+          </button>
 
-        <button
-          type="button"
-          className="btn btn-error flex-1"
-          onClick={() =>
-            onReject(
-              request.id,
-              adminNote
-            )
-          }
-        >
-          Tolak
-        </button>
-      </div>
+          <button
+            type="button"
+            className="btn btn-error flex-1"
+            onClick={() =>
+              onReject(
+                request.id,
+                adminNote
+              )
+            }
+          >
+            Tolak
+          </button>
+        </div>
+      )}
     </div>
   );
 }

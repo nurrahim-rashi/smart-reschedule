@@ -6,15 +6,34 @@ import {
 } from "../utils/api.js";
 
 import RequestItem from "../components/RequestItem.jsx";
+import Toast from "../components/Toast.jsx";
+
+const TABS = [
+  { status: "pending", label: "Pending" },
+  { status: "approved", label: "Disetujui" },
+  { status: "rejected", label: "Ditolak" },
+];
+
+const EMPTY_MESSAGES = {
+  pending: "Tidak ada request yang menunggu persetujuan.",
+  approved: "Belum ada request yang disetujui.",
+  rejected: "Belum ada request yang ditolak.",
+};
 
 function AdminPage() {
   const [rescheduleRequests, setRescheduleRequests] =
     useState([]);
 
+  const [activeTab, setActiveTab] =
+    useState("pending");
+
   const [loading, setLoading] =
     useState(true);
 
   const [errorMessage, setErrorMessage] =
+    useState("");
+
+  const [successMessage, setSuccessMessage] =
     useState("");
 
   useEffect(() => {
@@ -45,11 +64,19 @@ function AdminPage() {
     fetchRequests();
   }, []);
 
-  function removeRequest(id) {
+  // Request tidak dihapus dari daftar, hanya pindah ke tab sesuai status barunya
+  function updateRequest(id, status, adminNote) {
     setRescheduleRequests((prev) =>
-      prev.filter(
-        (request) =>
-          request.id !== id
+      prev.map((request) =>
+        request.id === id
+          ? {
+              ...request,
+              status,
+              adminNote,
+              reviewedAt:
+                new Date().toISOString(),
+            }
+          : request
       )
     );
   }
@@ -73,7 +100,10 @@ function AdminPage() {
       return;
     }
 
-    removeRequest(id);
+    updateRequest(id, "approved", adminNote);
+    setSuccessMessage(
+      "Request disetujui, jadwal member sudah dipindah."
+    );
   }
 
   async function onRejectHandler(
@@ -95,11 +125,34 @@ function AdminPage() {
       return;
     }
 
-    removeRequest(id);
+    updateRequest(id, "rejected", adminNote);
+    setSuccessMessage("Request ditolak.");
   }
 
+  const countByStatus = (status) =>
+    rescheduleRequests.filter(
+      (request) => request.status === status
+    ).length;
+
+  const visibleRequests =
+    rescheduleRequests.filter(
+      (request) =>
+        request.status === activeTab
+    );
+
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6">
+    <div className="max-w-6xl mx-auto px-4 py-6">
+      <Toast
+        message={errorMessage}
+        type="error"
+        onClose={() => setErrorMessage("")}
+      />
+
+      <Toast
+        message={successMessage}
+        onClose={() => setSuccessMessage("")}
+      />
+
       {/* Header */}
 
       <div className="mb-8">
@@ -107,7 +160,7 @@ function AdminPage() {
           Dashboard Admin
         </h1>
 
-        <p className="text-gray-500 mt-2">
+        <p className="text-base-content/60 mt-2">
           Kelola permintaan
           reschedule member.
         </p>
@@ -115,82 +168,103 @@ function AdminPage() {
 
       {/* Statistics */}
 
-      <div className="stats shadow w-full mb-8">
+      <div className="stats stats-vertical md:stats-horizontal shadow w-full mb-8">
         <div className="stat">
           <div className="stat-title">
-            Request Pending
+            Menunggu
           </div>
 
           <div className="stat-value text-warning">
-            {
-              rescheduleRequests.length
-            }
+            {loading ? "-" : countByStatus("pending")}
           </div>
 
           <div className="stat-desc">
-            Menunggu persetujuan
+            Perlu diputuskan
           </div>
         </div>
 
         <div className="stat">
           <div className="stat-title">
-            AI Assistant
+            Disetujui
           </div>
 
           <div className="stat-value text-success">
-            Aktif
+            {loading ? "-" : countByStatus("approved")}
           </div>
 
           <div className="stat-desc">
-            Smart Reschedule
+            Jadwal sudah dipindah
           </div>
         </div>
 
         <div className="stat">
           <div className="stat-title">
-            Sistem
+            Ditolak
           </div>
 
-          <div className="stat-value text-primary">
-            Online
+          <div className="stat-value text-error">
+            {loading ? "-" : countByStatus("rejected")}
           </div>
 
           <div className="stat-desc">
-            GymSync
+            Termasuk yang dibatalkan member
           </div>
         </div>
       </div>
 
-      {/* Error */}
+      {/* Tabs */}
 
-      {errorMessage && (
-        <div className="alert alert-error mb-6">
-          <span>
-            {errorMessage}
-          </span>
-        </div>
-      )}
+      <div
+        role="tablist"
+        className="tabs tabs-box mb-6 w-fit"
+      >
+        {TABS.map((tab) => (
+          <button
+            key={tab.status}
+            type="button"
+            role="tab"
+            onClick={() =>
+              setActiveTab(tab.status)
+            }
+            className={`tab gap-2 ${
+              activeTab === tab.status
+                ? "tab-active"
+                : ""
+            }`}
+          >
+            {tab.label}
+
+            {!loading && (
+              <span className="badge badge-sm">
+                {countByStatus(tab.status)}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
 
       {/* Loading */}
 
       {loading && (
-        <div className="flex justify-center py-12">
-          <span className="loading loading-spinner loading-lg text-success"></span>
+        <div className="space-y-4">
+          {[1, 2].map((key) => (
+            <div
+              key={key}
+              className="skeleton h-56 w-full"
+            ></div>
+          ))}
         </div>
       )}
 
       {/* Empty State */}
 
       {!loading &&
-        rescheduleRequests.length ===
-          0 && (
+        visibleRequests.length === 0 && (
           <div className="card bg-base-100 shadow-xl">
             <div className="card-body">
               <div className="alert alert-info">
                 <span>
-                  Tidak ada request
-                  yang menunggu
-                  persetujuan.
+                  {EMPTY_MESSAGES[activeTab]}
                 </span>
               </div>
             </div>
@@ -200,38 +274,31 @@ function AdminPage() {
       {/* Request List */}
 
       {!loading &&
-        rescheduleRequests.length >
-          0 && (
-          <>
-            <h2 className="text-2xl font-semibold mb-4">
-              Request Pending
-            </h2>
-
-            <div className="space-y-4">
-              {rescheduleRequests.map(
-                (request) => (
-                  <div
-                    key={request.id}
-                    className="card bg-base-100 shadow-lg"
-                  >
-                    <div className="card-body">
-                      <RequestItem
-                        request={
-                          request
-                        }
-                        onApprove={
-                          onApproveHandler
-                        }
-                        onReject={
-                          onRejectHandler
-                        }
-                      />
-                    </div>
+        visibleRequests.length > 0 && (
+          <div className="space-y-4">
+            {visibleRequests.map(
+              (request) => (
+                <div
+                  key={request.id}
+                  className="card bg-base-100 shadow-lg"
+                >
+                  <div className="card-body">
+                    <RequestItem
+                      request={
+                        request
+                      }
+                      onApprove={
+                        onApproveHandler
+                      }
+                      onReject={
+                        onRejectHandler
+                      }
+                    />
                   </div>
-                )
-              )}
-            </div>
-          </>
+                </div>
+              )
+            )}
+          </div>
         )}
     </div>
   );

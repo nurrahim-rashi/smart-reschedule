@@ -38,7 +38,21 @@ export const getAvailableTimeSlotsHandler = async () => {
 };
 
 export const getRecommendedTimeSlotsHandler = async (request) => {
-    const { day, period, time, excludeSlotId } = validateRecommendationQuery(request.query);
+    const { day, period, excludeSlotId } = validateRecommendationQuery(request.query);
+    let { time } = validateRecommendationQuery(request.query);
+
+    // excludeSlotId = jadwal customer saat ini. Jika customer tidak menyebut jam/waktu
+    // (mis. "pindahin ke 3 minggu lagi"), anggap ingin jam yang sama dengan jadwalnya sekarang.
+    let assumedHour = null;
+
+    if (excludeSlotId && !time && !period) {
+        const currentStart = await TimeSlotsRepository.getSlotStartTime(excludeSlotId);
+
+        if (currentStart) {
+            assumedHour = getSlotParts(currentStart).hour;
+            time = `${assumedHour}:00`;
+        }
+    }
 
     const timeSlots = (await getUpcomingAvailableSlots())
         .filter((slot) => slot.id !== excludeSlotId);
@@ -47,6 +61,6 @@ export const getRecommendedTimeSlotsHandler = async (request) => {
 
     return {
         status: 'success',
-        data: { matched, alternatives },
+        data: { matched, alternatives, assumedHour },
     };
 };

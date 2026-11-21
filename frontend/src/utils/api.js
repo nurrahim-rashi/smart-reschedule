@@ -156,8 +156,10 @@ async function addRescheduleRequests({ bookingId, requestedSlotId, message }) {
     return { error: false, data: responseJson.data };
 }
 
-async function getRescheduleRequests() {
-    const response = await fetchWithToken(`${BASE_URL}/reschedule-requests?status=pending`);
+// Tanpa status: semua request (pending, approved, rejected)
+async function getRescheduleRequests(status) {
+    const query = status ? `?status=${status}` : '';
+    const response = await fetchWithToken(`${BASE_URL}/reschedule-requests${query}`);
     const responseJson = await response.json();
 
     if (responseJson.status !== 'success') {

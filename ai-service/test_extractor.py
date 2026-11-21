@@ -33,7 +33,20 @@ class ExtractPreferencesTest(unittest.TestCase):
 
     def test_minggu_depan_bukan_hari_minggu(self):
 
-        self.assertPreferences("Minggu ini saya sibuk, bisa geser ke minggu depan?", (None, None, None))
+        self.assertPreferences("Minggu ini saya sibuk, bisa geser ke minggu depan?", ("minggu depan", None, None))
+
+    def test_beberapa_minggu_lagi_bukan_hari_minggu(self):
+
+        self.assertPreferences("pidnahin ke 3 minggu lagi", ("3 minggu lagi", None, None))
+
+    def test_angka_dalam_kata_diseragamkan(self):
+
+        self.assertPreferences("pindahin ke seminggu lagi", ("1 minggu lagi", None, None))
+        self.assertPreferences("geser ke dua minggu lagi sore ya", ("2 minggu lagi", "sore", None))
+
+    def test_beberapa_hari_lagi(self):
+
+        self.assertPreferences("minta pindah 5 hari lagi jam 8 pagi", ("5 hari lagi", "pagi", "jam 8"))
 
     def test_hari_minggu_tetap_terbaca(self):
 

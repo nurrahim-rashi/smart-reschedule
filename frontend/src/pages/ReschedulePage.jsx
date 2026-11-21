@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 import SlotPicker from "../components/SlotPicker.jsx";
+import Toast from "../components/Toast.jsx";
 import { analyzeMessage } from "../utils/ai.js";
 import {
   getMyBookings,
@@ -160,8 +161,10 @@ function ReschedulePage() {
 
   if (initializing) {
     return (
-      <div className="max-w-6xl mx-auto px-4 py-6">
-        <span className="loading loading-spinner loading-md"></span>
+      <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
+        <div className="skeleton h-10 w-72"></div>
+        <div className="skeleton h-28 w-full"></div>
+        <div className="skeleton h-48 w-full"></div>
       </div>
     );
   }
@@ -169,6 +172,11 @@ function ReschedulePage() {
   if (!booking) {
     return (
       <div className="max-w-6xl mx-auto px-4 py-6">
+        <Toast
+          message={successMessage}
+          onClose={() => setSuccessMessage("")}
+        />
+
         <h1 className="text-4xl font-bold text-success">Ajukan Reschedule</h1>
 
         <div className="alert alert-warning mt-6">
@@ -188,21 +196,20 @@ function ReschedulePage() {
     <div className="max-w-6xl mx-auto px-4 py-6">
       <h1 className="text-4xl font-bold text-success">Ajukan Reschedule</h1>
 
-      <p className="text-gray-500 mt-2 mb-6">
+      <p className="text-base-content/60 mt-2 mb-6">
         Ceritakan jadwal yang Anda inginkan, AI akan mencarikan slot yang cocok.
       </p>
 
-      {errorMessage && (
-        <div className="alert alert-error mb-6">
-          <span>{errorMessage}</span>
-        </div>
-      )}
+      <Toast
+        message={errorMessage}
+        type="error"
+        onClose={() => setErrorMessage("")}
+      />
 
-      {successMessage && (
-        <div className="alert alert-success mb-6">
-          <span>{successMessage}</span>
-        </div>
-      )}
+      <Toast
+        message={successMessage}
+        onClose={() => setSuccessMessage("")}
+      />
 
       {/* Booking */}
 
@@ -269,7 +276,10 @@ function ReschedulePage() {
             <h2 className="card-title">Hasil Analisis AI</h2>
 
             <div className="flex flex-wrap gap-2">
-              <span className="badge badge-primary">Intent: {analysis.intent}</span>
+              <span className="badge badge-primary">
+                Intent: {analysis.intent}
+                {analysis.intent_source === "keyword" && " (dari kata kunci)"}
+              </span>
               <span className="badge badge-outline">Hari: {analysis.preferred_day || "-"}</span>
               <span className="badge badge-outline">Waktu: {analysis.preferred_period || "-"}</span>
               <span className="badge badge-outline">Jam: {analysis.preferred_time || "-"}</span>
@@ -309,6 +319,13 @@ function ReschedulePage() {
         <div className="card bg-base-100 shadow-lg mb-6">
           <div className="card-body">
             <h2 className="card-title">Rekomendasi Slot</h2>
+
+            {recommendation.assumedHour != null && (
+              <p className="text-sm text-base-content/60">
+                Jam tidak disebut, jadi kami pakai jam jadwal Anda sekarang (
+                {String(recommendation.assumedHour).padStart(2, "0")}:00).
+              </p>
+            )}
 
             {recommendation.matched.length > 0 ? (
               <>

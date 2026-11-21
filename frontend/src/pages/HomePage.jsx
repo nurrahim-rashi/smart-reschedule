@@ -20,7 +20,7 @@ function HomePage() {
                 GymSync
               </h1>
 
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-base-content/60">
                 by Gymnasyum
               </p>
             </div>
@@ -63,7 +63,7 @@ function HomePage() {
               Smart Reschedule Assistant
             </div>
 
-            <p className="py-6 text-lg text-gray-600">
+            <p className="py-6 text-lg text-base-content/70">
               Membantu customer dan admin Gymnasyum
               mengelola perubahan jadwal latihan
               dengan lebih cepat, mudah, dan
@@ -150,7 +150,7 @@ function HomePage() {
             Tentang GymSync
           </h2>
 
-          <p className="leading-relaxed text-gray-600">
+          <p className="leading-relaxed text-base-content/70">
             GymSync merupakan Smart Reschedule
             Assistant yang dikembangkan untuk
             membantu proses pengelolaan

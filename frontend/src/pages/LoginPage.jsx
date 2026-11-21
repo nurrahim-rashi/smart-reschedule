@@ -61,7 +61,7 @@ function LoginPage({ loginSuccess }) {
               GymSync
             </h1>
 
-            <p className="text-sm text-gray-500 mt-2">
+            <p className="text-sm text-base-content/60 mt-2">
               Smart Reschedule Assistant
             </p>
           </div>
@@ -75,7 +75,7 @@ function LoginPage({ loginSuccess }) {
               Masuk
             </h2>
 
-            <p className="text-sm text-gray-500 mt-2">
+            <p className="text-sm text-base-content/60 mt-2">
               Kelola perubahan jadwal latihan
               dengan lebih mudah.
             </p>
@@ -172,13 +172,13 @@ function LoginPage({ loginSuccess }) {
           <div className="text-center text-sm mt-2">
             <Link
               to="/"
-              className="link link-hover text-gray-500"
+              className="link link-hover text-base-content/60"
             >
               ← Kembali ke Beranda
             </Link>
           </div>
 
-          <div className="text-center text-xs text-gray-400 mt-4">
+          <div className="text-center text-xs text-base-content/50 mt-4">
             © GymSync by Gymnasyum
           </div>
         </div>

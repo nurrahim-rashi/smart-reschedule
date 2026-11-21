@@ -17,6 +17,8 @@ const RELATIVE_DAYS = {
     lusa: 2,
 };
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+
 export const getPeriod = (hour) => {
     if (hour < 11) return 'pagi';
     if (hour < 15) return 'siang';
@@ -51,28 +53,67 @@ export const parsePreferredHour = (time, period) => {
     return hour <= 23 ? hour : null;
 };
 
+const daysFromNow = (now, days) => getDateKey(new Date(now.getTime() + days * DAY_MS));
+
 /**
- * Hari preferensi bisa berupa nama hari ("sabtu") atau relatif ("besok").
- * Hari relatif diubah menjadi tanggal lokal supaya bisa dibandingkan dengan slot.
+ * Hari preferensi bisa berupa:
+ * - nama hari: "sabtu" -> { day: 'sabtu' }
+ * - hari relatif: "besok", "5 hari lagi" -> satu tanggal
+ * - minggu relatif: "minggu depan", "3 minggu lagi" -> rentang 7 hari mulai N minggu dari sekarang
+ *
+ * Tanggal dalam format YYYY-MM-DD sehingga bisa dibandingkan sebagai string.
  */
 export const resolvePreferredDay = (day, now = new Date()) => {
     if (!day) {
         return null;
     }
 
-    const key = day.toLowerCase();
+    const key = day.toLowerCase().trim();
+
+    let offset = null;
 
     if (key in RELATIVE_DAYS) {
-        const date = new Date(now.getTime() + RELATIVE_DAYS[key] * 24 * 60 * 60 * 1000);
-        return { dateKey: getDateKey(date) };
+        offset = RELATIVE_DAYS[key];
+    }
+
+    const daysMatch = key.match(/^(\d+) hari lagi$/);
+    if (daysMatch) {
+        offset = Number(daysMatch[1]);
+    }
+
+    if (offset !== null) {
+        const dateKey = daysFromNow(now, offset);
+        return { dateFrom: dateKey, dateTo: dateKey };
+    }
+
+    const weeksMatch = key.match(/^(\d+) minggu lagi$/);
+    const weeks = key === 'minggu depan' ? 1 : Number(weeksMatch?.[1]);
+
+    if (weeks) {
+        return {
+            dateFrom: daysFromNow(now, weeks * 7),
+            dateTo: daysFromNow(now, weeks * 7 + 6),
+            isRange: true,
+        };
     }
 
     return { day: key };
 };
 
-const isSameDay = (slot, preferredDay) => (preferredDay.dateKey
-    ? slot.dateKey === preferredDay.dateKey
-    : slot.day === preferredDay.day);
+const isSameDay = (slot, preferredDay) => (preferredDay.day
+    ? slot.day === preferredDay.day
+    : slot.dateKey >= preferredDay.dateFrom && slot.dateKey <= preferredDay.dateTo);
+
+// Jarak (hari) dari tanggal slot ke rentang tanggal yang diminta; 0 jika di dalam rentang
+const dayDistance = (slot, preferredDay) => {
+    const date = Date.parse(slot.dateKey);
+    const from = Date.parse(preferredDay.dateFrom);
+    const to = Date.parse(preferredDay.dateTo);
+
+    if (date < from) return (from - date) / DAY_MS;
+    if (date > to) return (date - to) / DAY_MS;
+    return 0;
+};
 
 /**
  * Rekomendasi slot berdasarkan preferensi customer.
@@ -116,7 +157,7 @@ export const recommendSlots = (slots, { day, period, time } = {}, now = new Date
 
             if (!usedIds.has(slot.id)) {
                 usedIds.add(slot.id);
-                alternatives.push({ ...slot, reason });
+                alternatives.push({ ...slot, reason: typeof reason === 'function' ? reason(slot) : reason });
                 limit -= 1;
             }
         }
@@ -129,7 +170,21 @@ export const recommendSlots = (slots, { day, period, time } = {}, now = new Date
             sameDay.sort((a, b) => Math.abs(a.hour - targetHour) - Math.abs(b.hour - targetHour));
         }
 
-        addAlternatives(sameDay, 'Hari sama, jam lain', 3);
+        const sameDayReason = (slot) => {
+            if (!preferredDay.isRange) return 'Hari sama, jam lain';
+            return slot.hour === targetHour ? 'Minggu yang sama' : 'Minggu yang sama, jam lain';
+        };
+
+        addAlternatives(sameDay, sameDayReason, 3);
+
+        // Tanggal yang diminta tidak punya slot (mis. di luar jangkauan jadwal):
+        // tawarkan slot dengan tanggal paling dekat
+        if (sameDay.length === 0 && preferredDay.dateFrom) {
+            const nearestDate = [...slots].sort((a, b) => dayDistance(a, preferredDay) - dayDistance(b, preferredDay)
+                || (targetHour === null ? 0 : Math.abs(a.hour - targetHour) - Math.abs(b.hour - targetHour)));
+
+            addAlternatives(nearestDate, 'Tanggal terdekat', 3);
+        }
     }
 
     if (preferredPeriod) {
@@ -143,10 +198,22 @@ export const recommendSlots = (slots, { day, period, time } = {}, now = new Date
             reason = 'Waktu sama, hari lain';
         }
 
+        // Untuk permintaan bertanggal, utamakan hari lain yang paling dekat dengan tanggalnya
+        if (preferredDay?.dateFrom) {
+            sameTime = [...sameTime].sort((a, b) => dayDistance(a, preferredDay) - dayDistance(b, preferredDay));
+        }
+
         addAlternatives(sameTime, reason, 3);
     }
 
-    addAlternatives(slots, 'Slot terdekat', MAX_ALTERNATIVES);
+    // Sisa pilihan: untuk permintaan bertanggal, urutkan dari tanggal yang paling dekat
+    // dengan permintaan; selain itu, slot paling awal
+    if (preferredDay?.dateFrom) {
+        const byDate = [...slots].sort((a, b) => dayDistance(a, preferredDay) - dayDistance(b, preferredDay));
+        addAlternatives(byDate, 'Tanggal terdekat', MAX_ALTERNATIVES);
+    } else {
+        addAlternatives(slots, 'Slot terdekat', MAX_ALTERNATIVES);
+    }
 
     return { matched, alternatives };
 };

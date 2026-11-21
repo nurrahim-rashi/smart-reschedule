@@ -1,5 +1,12 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { getAvailableSlots, getRecommendedSlots, addBooking, cancelBooking, generateDecisionDraft } from './api.js';
+import {
+    getAvailableSlots,
+    getRecommendedSlots,
+    addBooking,
+    cancelBooking,
+    generateDecisionDraft,
+    getRescheduleRequests,
+} from './api.js';
 
 function mockFetch(responseJson) {
     return vi.spyOn(globalThis, 'fetch').mockResolvedValue({
@@ -122,5 +129,24 @@ describe('generateDecisionDraft', () => {
         const result = await generateDecisionDraft(4, { decision: 'approved' });
 
         expect(result).toEqual({ error: true, message: 'Layanan AI sedang tidak tersedia' });
+    });
+});
+
+describe('getRescheduleRequests', () => {
+    it('harus mengambil semua request kalau status tidak diisi', async () => {
+        const fetchSpy = mockFetch({ status: 'success', data: { rescheduleRequests: [] } });
+
+        await getRescheduleRequests();
+
+        expect(fetchSpy.mock.calls[0][0]).toBe('http://localhost:5000/reschedule-requests');
+    });
+
+    it('harus menambahkan filter status kalau diisi', async () => {
+        const fetchSpy = mockFetch({ status: 'success', data: { rescheduleRequests: [{ id: 1 }] } });
+
+        const result = await getRescheduleRequests('pending');
+
+        expect(fetchSpy.mock.calls[0][0]).toBe('http://localhost:5000/reschedule-requests?status=pending');
+        expect(result).toEqual({ error: false, data: [{ id: 1 }] });
     });
 });
