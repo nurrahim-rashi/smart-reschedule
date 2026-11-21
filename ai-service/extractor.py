@@ -14,12 +14,15 @@ WORD_NUMBERS = {
     "empat": 4,
 }
 
-# "3 minggu lagi", "seminggu lagi", "5 hari lagi"
-RELATIVE_PATTERN = r"(?:\d+\s*|se|satu\s+|dua\s+|tiga\s+|empat\s+)(?:hari|minggu)\s+lagi"
+# "3 minggu lagi", "seminggu lagi", "5 hari lagi", "2 bulan lagi"
+RELATIVE_PATTERN = r"(?:\d+\s*|se|satu\s+|dua\s+|tiga\s+|empat\s+)(?:hari|minggu|bulan)\s+lagi"
 
 DAYS = [
     RELATIVE_PATTERN,
-    r"minggu\s+depan",
+    # "minggu depannya lagi" = dua minggu lagi; pola yang lebih panjang harus di depan
+    r"minggu\s+depan(?:nya)?\s+lagi",
+    r"minggu\s+depan(?:nya)?",
+    r"bulan\s+depan(?:nya)?",
     "senin",
     "selasa",
     "rabu",
@@ -148,7 +151,7 @@ def normalize_day(day):
 
         return None
 
-    match = re.fullmatch(r"(\d+|se|satu|dua|tiga|empat)\s*(hari|minggu)\s+lagi", day)
+    match = re.fullmatch(r"(\d+|se|satu|dua|tiga|empat)\s*(hari|minggu|bulan)\s+lagi", day)
 
     if match:
 
@@ -156,6 +159,18 @@ def normalize_day(day):
         number = int(amount) if amount.isdigit() else WORD_NUMBERS[amount]
 
         return f"{number} {unit} lagi"
+
+    if re.fullmatch(r"minggu\s+depan(?:nya)?\s+lagi", day):
+
+        return "2 minggu lagi"
+
+    if re.fullmatch(r"minggu\s+depan(?:nya)?", day):
+
+        return "minggu depan"
+
+    if re.fullmatch(r"bulan\s+depan(?:nya)?", day):
+
+        return "1 bulan lagi"
 
     return re.sub(r"\s+", " ", day)
 

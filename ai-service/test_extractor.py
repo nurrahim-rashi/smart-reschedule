@@ -44,6 +44,21 @@ class ExtractPreferencesTest(unittest.TestCase):
         self.assertPreferences("pindahin ke seminggu lagi", ("1 minggu lagi", None, None))
         self.assertPreferences("geser ke dua minggu lagi sore ya", ("2 minggu lagi", "sore", None))
 
+    def test_minggu_depannya_lagi_berarti_dua_minggu(self):
+
+        self.assertPreferences("ubah ke minggu depannya lagi dong", ("2 minggu lagi", None, None))
+        self.assertPreferences("geser ke minggu depan lagi sore", ("2 minggu lagi", "sore", None))
+
+    def test_minggu_depannya_berarti_minggu_depan(self):
+
+        self.assertPreferences("pindah ke minggu depannya aja", ("minggu depan", None, None))
+
+    def test_bulan_relatif(self):
+
+        self.assertPreferences("pindahin ke bulan depan aja", ("1 bulan lagi", None, None))
+        self.assertPreferences("geser 2 bulan lagi jam 7 malam", ("2 bulan lagi", "malam", "jam 7"))
+        self.assertPreferences("reschedule ke sebulan lagi", ("1 bulan lagi", None, None))
+
     def test_beberapa_hari_lagi(self):
 
         self.assertPreferences("minta pindah 5 hari lagi jam 8 pagi", ("5 hari lagi", "pagi", "jam 8"))

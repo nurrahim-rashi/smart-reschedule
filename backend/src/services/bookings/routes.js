@@ -1,4 +1,9 @@
-import { getMyBookingsHandler, postBookingHandler, cancelBookingHandler } from "./controller.js";
+import {
+    getMyBookingsHandler,
+    getMyCancelledBookingsHandler,
+    postBookingHandler,
+    cancelBookingHandler,
+} from "./controller.js";
 
 const routes = [
     {
@@ -14,6 +19,15 @@ const routes = [
         method: 'POST',
         path: '/bookings/{id}/cancel',
         handler: cancelBookingHandler,
+        options: {
+            auth: 'gymnasyum_jwt',
+        },
+    },
+
+    {
+        method: 'GET',
+        path: '/bookings/me/cancelled',
+        handler: getMyCancelledBookingsHandler,
         options: {
             auth: 'gymnasyum_jwt',
         },

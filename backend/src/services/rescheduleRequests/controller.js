@@ -1,4 +1,4 @@
-import RescheduleRequestsRepository from "./repository.js";
+import RescheduleRequestsRepository, { STATUS_LABELS } from "./repository.js";
 import UsersRepository from "../users/repository.js";
 import {
     validateRequestPayload,
@@ -11,8 +11,9 @@ import { InvariantError, NotFoundError } from "../../exceptions/index.js";
 import { verifyAdmin } from "../../security/authorization.js";
 import { getDraftReply, getDecisionReply } from "../../ai/ai-client.js";
 import { getUpcomingAvailableSlots } from "../timeSlots/controller.js";
+import { getMaxSlotDate } from "../timeSlots/repository.js";
 import { recommendSlots } from "../../utils/slot-recommendation.js";
-import { formatSlotLabel } from "../../utils/slot-label.js";
+import { formatSlotLabel, getDateKey } from "../../utils/slot-label.js";
 
 const mapRequest = (row) => ({
     id: row.id,
@@ -170,7 +171,7 @@ export const postDecisionDraftHandler = async (request, h) => {
     }
 
     if (detail.status !== 'pending') {
-        throw new InvariantError(`Request ini sudah ${detail.status}`);
+        throw new InvariantError(`Request ini sudah ${STATUS_LABELS[detail.status]}`);
     }
 
     // Saat menolak, tawarkan slot lain yang paling dekat dengan preferensi customer
@@ -184,7 +185,7 @@ export const postDecisionDraftHandler = async (request, h) => {
             day: detail.preferred_day,
             period: detail.preferred_period,
             time: detail.preferred_time,
-        });
+        }, new Date(), { maxDateKey: getDateKey(getMaxSlotDate()) });
 
         alternatives = [...matched, ...others]
             .slice(0, MAX_DRAFT_ALTERNATIVES)

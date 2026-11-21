@@ -12,7 +12,7 @@ const reviewPayloadSchema = Joi.object({
 });
 
 const requestQuerySchema = Joi.object({
-    status: Joi.string().valid('pending', 'approved', 'rejected'),
+    status: Joi.string().valid('pending', 'approved', 'rejected', 'cancelled'),
 });
 
 const requestParamsSchema = Joi.object({

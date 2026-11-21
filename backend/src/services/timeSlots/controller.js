@@ -1,5 +1,5 @@
-import TimeSlotsRepository from "./repository.js";
-import { formatSlotLabel, getSlotParts } from "../../utils/slot-label.js";
+import TimeSlotsRepository, { getMaxSlotDate, SLOT_DAYS_AHEAD } from "./repository.js";
+import { formatSlotLabel, getSlotParts, getDateKey, formatDateLabel } from "../../utils/slot-label.js";
 import { recommendSlots } from "../../utils/slot-recommendation.js";
 import { validateRecommendationQuery } from "./validator.js";
 
@@ -57,10 +57,24 @@ export const getRecommendedTimeSlotsHandler = async (request) => {
     const timeSlots = (await getUpcomingAvailableSlots())
         .filter((slot) => slot.id !== excludeSlotId);
 
-    const { matched, alternatives } = recommendSlots(timeSlots, { day, period, time });
+    const maxDate = getMaxSlotDate();
+
+    const { matched, alternatives, clampedToMaxDate } = recommendSlots(
+        timeSlots,
+        { day, period, time },
+        new Date(),
+        { maxDateKey: getDateKey(maxDate) },
+    );
 
     return {
         status: 'success',
-        data: { matched, alternatives, assumedHour },
+        data: {
+            matched,
+            alternatives,
+            assumedHour,
+            clampedToMaxDate,
+            maxDays: SLOT_DAYS_AHEAD,
+            maxDateLabel: formatDateLabel(maxDate),
+        },
     };
 };

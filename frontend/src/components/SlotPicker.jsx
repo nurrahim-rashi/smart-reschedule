@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { groupSlotsByDate, splitSlotLabel } from "../utils/slot.js";
 
-function SlotPicker({ slots, selectedId, onSelect }) {
+// activeBookingId: jadwal yang sedang di-reschedule, ditampilkan tanpa tombol Reschedule
+function SlotPicker({ slots, selectedId, onSelect, activeBookingId }) {
   const groups = groupSlotsByDate(slots);
   const [activeDate, setActiveDate] = useState(null);
 
@@ -35,7 +37,45 @@ function SlotPicker({ slots, selectedId, onSelect }) {
       </div>
 
       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-2 mt-4">
-        {currentSlots.map((slot) => (
+        {currentSlots.map((slot) => slot.bookingId ? (
+          // Slot milik member: tidak bisa dipilih, tapi bisa langsung di-reschedule
+          <div
+            key={slot.id}
+            className="flex flex-col items-center justify-center gap-1 rounded-field border border-success/40 bg-success/10 py-2"
+          >
+            {slot.bookingId === activeBookingId ? (
+              <>
+                <span className="font-semibold opacity-60">
+                  {splitSlotLabel(slot.label).time}
+                </span>
+
+                <span className="text-xs text-success font-medium">
+                  Jadwal sekarang
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="text-xs text-success font-medium">
+                  Sudah di-booking
+                </span>
+
+                <span className="font-semibold opacity-60">
+                  {splitSlotLabel(slot.label).time}
+                </span>
+              </>
+            )}
+
+            {slot.bookingId !== activeBookingId && (
+              <Link
+                to="/reschedule"
+                state={{ bookingId: slot.bookingId }}
+                className="btn btn-xs btn-success btn-outline"
+              >
+                Reschedule
+              </Link>
+            )}
+          </div>
+        ) : (
           <button
             key={slot.id}
             type="button"

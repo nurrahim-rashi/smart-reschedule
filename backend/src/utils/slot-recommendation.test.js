@@ -52,6 +52,10 @@ describe('resolvePreferredDay', () => {
         expect(resolvePreferredDay('5 hari lagi', NOW)).toEqual({ dateFrom: '2026-11-26', dateTo: '2026-11-26' });
     });
 
+    it('membaca bulan relatif sebagai 30 hari', () => {
+        expect(resolvePreferredDay('2 bulan lagi', NOW)).toEqual({ dateFrom: '2027-01-20', dateTo: '2027-01-26', isRange: true });
+    });
+
     it('membaca minggu relatif menjadi rentang 7 hari', () => {
         expect(resolvePreferredDay('minggu depan', NOW)).toEqual({ dateFrom: '2026-11-28', dateTo: '2026-12-04', isRange: true });
         expect(resolvePreferredDay('3 minggu lagi', NOW)).toEqual({ dateFrom: '2026-12-12', dateTo: '2026-12-18', isRange: true });
@@ -152,5 +156,38 @@ describe('recommendSlots', () => {
         // 12-18 Des di luar slot test, jadi alternatif jam sama diambil dari tanggal terdekat (Jumat 27 Nov)
         expect(matched).toHaveLength(0);
         expect(alternatives[0]).toMatchObject({ dateKey: '2026-11-27', hour: 10 });
+    });
+
+    it('menahan permintaan yang melewati batas tanggal ke tanggal terakhir', () => {
+        // Batas 27 Nov, customer minta 2 bulan lagi jam 10
+        const { matched, alternatives, clampedToMaxDate } = recommendSlots(
+            slots,
+            { day: '2 bulan lagi', time: '10:00' },
+            NOW,
+            { maxDateKey: '2026-11-27' },
+        );
+
+        expect(clampedToMaxDate).toBe(true);
+        expect(matched).toHaveLength(1);
+        expect(matched[0]).toMatchObject({ dateKey: '2026-11-27', hour: 10 });
+        expect(alternatives.length).toBeGreaterThanOrEqual(5);
+        expect(alternatives.every((slot) => slot.dateKey <= '2026-11-27')).toBe(true);
+    });
+
+    it('memotong rentang yang sebagian melewati batas tanpa menandai clamped', () => {
+        // Minggu depan = 28 Nov - 4 Des, batas 30 Nov
+        const extraSlots = [...slots, ...[28, 29, 30].map((day, index) => {
+            const startTime = new Date(Date.UTC(2026, 10, day, 1));
+            return { id: 2000 + index, startTime, ...getSlotParts(startTime) };
+        })];
+
+        const { matched, clampedToMaxDate } = recommendSlots(extraSlots, { day: 'minggu depan' }, NOW, { maxDateKey: '2026-11-30' });
+
+        expect(clampedToMaxDate).toBe(false);
+        expect(matched.map((slot) => slot.dateKey)).toEqual(['2026-11-28', '2026-11-29', '2026-11-30']);
+    });
+
+    it('tidak menahan apa pun jika batas tanggal tidak diberikan', () => {
+        expect(recommendSlots(slots, { day: '2 bulan lagi' }, NOW).clampedToMaxDate).toBe(false);
     });
 });

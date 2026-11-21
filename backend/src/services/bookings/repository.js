@@ -24,6 +24,20 @@ class BookingsRepository {
         return result.rows;
     }
 
+    async getCancelledBookingsByCustomer(customerId) {
+        const query = {
+            text: `SELECT b.id, b.slot_id, b.cancelled_at, ts.session_type, ts.start_time, ts.end_time
+                FROM bookings b
+                JOIN time_slots ts ON ts.id = b.slot_id
+                WHERE b.customer_id = $1 AND b.status = 'cancelled'
+                ORDER BY b.cancelled_at DESC NULLS LAST`,
+            values: [customerId],
+        };
+
+        const result = await this.pool.query(query);
+        return result.rows;
+    }
+
     async addBooking({ customerId, slotId }) {
         const client = await this.pool.connect();
 
@@ -99,14 +113,14 @@ class BookingsRepository {
             }
 
             await client.query({
-                text: "UPDATE bookings SET status = 'cancelled' WHERE id = $1",
+                text: "UPDATE bookings SET status = 'cancelled', cancelled_at = now() WHERE id = $1",
                 values: [bookingId],
             });
 
             // Request reschedule yang masih menunggu ikut ditutup
             const requestResult = await client.query({
                 text: `UPDATE reschedule_requests
-                    SET status = 'rejected', admin_note = 'Booking dibatalkan oleh member', reviewed_at = now()
+                    SET status = 'cancelled', reviewed_at = now()
                     WHERE booking_id = $1 AND status = 'pending'`,
                 values: [bookingId],
             });

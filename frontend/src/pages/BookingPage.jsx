@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 import SlotPicker from "../components/SlotPicker.jsx";
+import { mergeBookedSlots } from "../utils/slot.js";
 import Toast from "../components/Toast.jsx";
 import {
   getMyBookings,
@@ -81,10 +82,8 @@ function BookingPage() {
     setReloadKey((key) => key + 1);
   }
 
-  const bookedSlotIds = new Set(bookings.map((booking) => booking.slotId));
-  const selectableSlots = timeSlots.filter(
-    (slot) => !bookedSlotIds.has(slot.id)
-  );
+  // Jadwal milik sendiri tetap tampil di grid, tapi tidak bisa dipilih lagi
+  const pickerSlots = mergeBookedSlots(timeSlots, bookings);
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
@@ -124,6 +123,7 @@ function BookingPage() {
                   <div className="flex gap-2">
                     <Link
                       to="/reschedule"
+                      state={{ bookingId: booking.id }}
                       className="btn btn-sm btn-outline btn-success"
                     >
                       Reschedule
@@ -159,7 +159,7 @@ function BookingPage() {
             </div>
           ) : (
             <SlotPicker
-              slots={selectableSlots}
+              slots={pickerSlots}
               selectedId={selectedSlot?.id}
               onSelect={setSelectedSlot}
             />

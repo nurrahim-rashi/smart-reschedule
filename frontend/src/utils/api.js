@@ -84,6 +84,17 @@ async function getMyBookings() {
     return { error: false, data: responseJson.data.bookings };
 }
 
+async function getMyCancelledBookings() {
+    const response = await fetchWithToken(`${BASE_URL}/bookings/me/cancelled`);
+    const responseJson = await response.json();
+
+    if (responseJson.status !== 'success') {
+        return { error: true, data: [] };
+    }
+
+    return { error: false, data: responseJson.data.bookings };
+}
+
 async function getAvailableSlots() {
     const response = await fetchWithToken(`${BASE_URL}/time-slots/available`);
     const responseJson = await response.json();
@@ -214,4 +225,4 @@ async function rejectRescheduleRequest(id, adminNote) {
     return { error: false };
 }
 
-export { register, login, putAccessToken, getAccessToken, removeAccessToken, getUserLogged, getMyRescheduleRequests, getMyBookings, getAvailableSlots, getRecommendedSlots, addBooking, cancelBooking, addRescheduleRequests, getRescheduleRequests, generateDecisionDraft, approveRescheduleRequest, rejectRescheduleRequest };
+export { register, login, putAccessToken, getAccessToken, removeAccessToken, getUserLogged, getMyRescheduleRequests, getMyBookings, getMyCancelledBookings, getAvailableSlots, getRecommendedSlots, addBooking, cancelBooking, addRescheduleRequests, getRescheduleRequests, generateDecisionDraft, approveRescheduleRequest, rejectRescheduleRequest };

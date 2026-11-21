@@ -44,3 +44,6 @@ export const getSlotParts = (startTime) => {
 };
 
 export const getDateKey = (date) => dateKeyFormatter.format(date);
+
+// "Minggu, 20 Des"
+export const formatDateLabel = (date) => `${dayFormatter.format(date)}, ${dateFormatter.format(date)}`;

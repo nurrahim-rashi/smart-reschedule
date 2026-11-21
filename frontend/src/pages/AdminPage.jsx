@@ -12,12 +12,14 @@ const TABS = [
   { status: "pending", label: "Pending" },
   { status: "approved", label: "Disetujui" },
   { status: "rejected", label: "Ditolak" },
+  { status: "cancelled", label: "Dibatalkan" },
 ];
 
 const EMPTY_MESSAGES = {
   pending: "Tidak ada request yang menunggu persetujuan.",
   approved: "Belum ada request yang disetujui.",
   rejected: "Belum ada request yang ditolak.",
+  cancelled: "Belum ada request yang dibatalkan member.",
 };
 
 function AdminPage() {
@@ -207,7 +209,21 @@ function AdminPage() {
           </div>
 
           <div className="stat-desc">
-            Termasuk yang dibatalkan member
+            Ditolak admin
+          </div>
+        </div>
+
+        <div className="stat">
+          <div className="stat-title">
+            Dibatalkan
+          </div>
+
+          <div className="stat-value text-base-content/60">
+            {loading ? "-" : countByStatus("cancelled")}
+          </div>
+
+          <div className="stat-desc">
+            Jadwal dibatalkan member
           </div>
         </div>
       </div>

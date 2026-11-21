@@ -5,6 +5,13 @@ const { Pool } = pkg;
 
 const UNIQUE_VIOLATION = '23505';
 
+export const STATUS_LABELS = {
+    pending: 'menunggu',
+    approved: 'disetujui',
+    rejected: 'ditolak',
+    cancelled: 'dibatalkan',
+};
+
 const REQUEST_COLUMNS = `
     r.id, r.customer_id, r.booking_id, r.message, r.status, r.admin_note,
     r.reviewed_at, r.created_at,
@@ -241,7 +248,7 @@ class RescheduleRequestsRepository {
 
         const request = result.rows[0];
         if (request.status !== 'pending') {
-            throw new InvariantError(`Request ini sudah ${request.status}`);
+            throw new InvariantError(`Request ini sudah ${STATUS_LABELS[request.status]}`);
         }
 
         return request;

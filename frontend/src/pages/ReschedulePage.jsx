@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 import SlotPicker from "../components/SlotPicker.jsx";
+import { mergeBookedSlots } from "../utils/slot.js";
 import Toast from "../components/Toast.jsx";
 import { analyzeMessage } from "../utils/ai.js";
 import {
@@ -49,6 +50,10 @@ function ReschedulePage() {
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [cancelling, setCancelling] = useState(false);
+  const [proceedBeyondLimit, setProceedBeyondLimit] = useState(false);
+
+  const location = useLocation();
+  const requestedBookingId = location.state?.bookingId;
 
   useEffect(() => {
     async function fetchData() {
@@ -58,18 +63,30 @@ function ReschedulePage() {
       ]);
 
       setBookings(bookingsResult.data);
-      setBooking(bookingsResult.data[0] ?? null);
+      // Dari tombol Reschedule di halaman Booking, langsung pilih jadwal itu
+      const requestedBooking = bookingsResult.data.find(
+        (item) => item.id === requestedBookingId
+      );
+
+      setBooking(requestedBooking ?? bookingsResult.data[0] ?? null);
+
+      // Pindah ke jadwal lain lewat tombol Reschedule: hasil analisis sebelumnya tidak berlaku lagi
+      setAnalysis(null);
+      setRecommendation(null);
+      setSelectedSlot(null);
+      setProceedBeyondLimit(false);
       setTimeSlots(slotsResult.data);
       setInitializing(false);
     }
 
     fetchData();
-  }, []);
+  }, [requestedBookingId]);
 
   function resetSelection() {
     setAnalysis(null);
     setRecommendation(null);
     setSelectedSlot(null);
+    setProceedBeyondLimit(false);
   }
 
   async function onAnalyze() {
@@ -190,7 +207,8 @@ function ReschedulePage() {
     );
   }
 
-  const otherSlots = timeSlots.filter((slot) => slot.id !== booking.slotId);
+  // Semua jadwal milik member tetap tampil di grid, ditandai "Sudah di-booking"
+  const pickerSlots = mergeBookedSlots(timeSlots, bookings);
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
@@ -313,12 +331,55 @@ function ReschedulePage() {
         </div>
       )}
 
+      {/* Melebihi batas jadwal: tanya dulu mau lanjut atau batal */}
+
+      {recommendation?.clampedToMaxDate && !proceedBeyondLimit && (
+        <div className="card bg-base-100 shadow-lg mb-6">
+          <div className="card-body">
+            <h2 className="card-title">Melebihi Batas Jadwal</h2>
+
+            <p>
+              Jadwal hanya bisa dipilih maksimal {recommendation.maxDays} hari
+              ke depan, yaitu sampai {recommendation.maxDateLabel}. Mau tetap
+              pindah ke slot paling akhir yang tersedia, atau batalkan jadwal{" "}
+              {booking.schedule}?
+            </p>
+
+            <div className="flex flex-col md:flex-row gap-2 mt-2">
+              <button
+                type="button"
+                onClick={() => setProceedBeyondLimit(true)}
+                className="btn btn-success"
+              >
+                Lanjut, pilih slot sampai {recommendation.maxDateLabel}
+              </button>
+
+              <button
+                type="button"
+                onClick={onCancelBooking}
+                disabled={cancelling}
+                className="btn btn-outline btn-error"
+              >
+                {cancelling ? "Membatalkan..." : "Batalkan Jadwal"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Recommendation */}
 
-      {recommendation && (
+      {recommendation && (!recommendation.clampedToMaxDate || proceedBeyondLimit) && (
         <div className="card bg-base-100 shadow-lg mb-6">
           <div className="card-body">
             <h2 className="card-title">Rekomendasi Slot</h2>
+
+            {recommendation.clampedToMaxDate && (
+              <p className="text-sm text-base-content/60">
+                Menampilkan slot paling akhir yang tersedia, sampai{" "}
+                {recommendation.maxDateLabel}.
+              </p>
+            )}
 
             {recommendation.assumedHour != null && (
               <p className="text-sm text-base-content/60">
@@ -387,7 +448,8 @@ function ReschedulePage() {
           {showAllSlots && (
             <div className="mt-4">
               <SlotPicker
-                slots={otherSlots}
+                slots={pickerSlots}
+                activeBookingId={booking.id}
                 selectedId={selectedSlot?.id}
                 onSelect={setSelectedSlot}
               />

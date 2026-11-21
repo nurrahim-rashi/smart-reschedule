@@ -5,6 +5,11 @@ import {
   getMyBookings,
   getMyRescheduleRequests,
 } from "../utils/api.js";
+import { splitSlotLabel, formatTimeRange } from "../utils/slot.js";
+import { paginate } from "../utils/pagination.js";
+import Pagination from "../components/Pagination.jsx";
+
+const BOOKINGS_PER_PAGE = 5;
 
 function MemberPage({ name }) {
   const [bookings, setBookings] =
@@ -15,6 +20,9 @@ function MemberPage({ name }) {
 
   const [loading, setLoading] =
     useState(true);
+
+  const [bookingPage, setBookingPage] =
+    useState(1);
 
   useEffect(() => {
     async function fetchData() {
@@ -45,6 +53,12 @@ function MemberPage({ name }) {
   );
 
   const nextBooking = bookings[0];
+
+  const {
+    pageItems: visibleBookings,
+    currentPage: currentBookingPage,
+    totalPages: totalBookingPages,
+  } = paginate(bookings, bookingPage, BOOKINGS_PER_PAGE);
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
@@ -112,7 +126,7 @@ function MemberPage({ name }) {
 
       <div className="card bg-base-100 shadow-lg mb-8">
         <div className="card-body">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-wrap justify-between items-center gap-2">
             <h2 className="card-title">
               🗓️ Jadwal Saya
             </h2>
@@ -151,38 +165,64 @@ function MemberPage({ name }) {
 
           {!loading && bookings.length > 0 && (
             <ul className="divide-y divide-base-200">
-              {bookings.map((booking, index) => (
-                <li
-                  key={booking.id}
-                  className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 py-3"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-lg font-semibold">
-                      {booking.schedule}
-                    </span>
+              {visibleBookings.map((booking) => {
+                const { dateLabel, time } =
+                  splitSlotLabel(booking.schedule);
 
-                    {index === 0 && (
-                      <span className="badge badge-success">
-                        Berikutnya
-                      </span>
-                    )}
+                const isNext =
+                  booking.id === nextBooking?.id;
 
-                    {pendingSchedules.has(booking.schedule) && (
-                      <span className="badge badge-warning">
-                        Menunggu reschedule
-                      </span>
-                    )}
-                  </div>
-
-                  <Link
-                    to="/reschedule"
-                    className="btn btn-sm btn-ghost text-success"
+                return (
+                  <li
+                    key={booking.id}
+                    className="flex items-center justify-between gap-3 py-3"
                   >
-                    Reschedule
-                  </Link>
-                </li>
-              ))}
+                    <div className="min-w-0">
+                      <p className="font-semibold">
+                        {dateLabel}
+                      </p>
+
+                      <p className="text-sm text-base-content/60">
+                        {formatTimeRange(time)} WIB
+                      </p>
+
+                      {(isNext ||
+                        pendingSchedules.has(booking.schedule)) && (
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {isNext && (
+                            <span className="badge badge-sm badge-success">
+                              Berikutnya
+                            </span>
+                          )}
+
+                          {pendingSchedules.has(booking.schedule) && (
+                            <span className="badge badge-sm badge-warning">
+                              Menunggu reschedule
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    <Link
+                      to="/reschedule"
+                      state={{ bookingId: booking.id }}
+                      className="btn btn-sm btn-outline btn-success shrink-0"
+                    >
+                      Reschedule
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
+          )}
+
+          {!loading && (
+            <Pagination
+              currentPage={currentBookingPage}
+              totalPages={totalBookingPages}
+              onPageChange={setBookingPage}
+            />
           )}
         </div>
       </div>
@@ -207,7 +247,7 @@ function MemberPage({ name }) {
                 to="/booking"
                 className="btn btn-success"
               >
-                Mulai
+                Booking Sekarang
               </Link>
             </div>
           </div>
@@ -228,9 +268,9 @@ function MemberPage({ name }) {
             <div className="card-actions justify-end">
               <Link
                 to="/reschedule"
-                className="btn btn-success"
+                className="btn btn-outline btn-success"
               >
-                Mulai
+                Ajukan Reschedule
               </Link>
             </div>
           </div>
@@ -252,7 +292,7 @@ function MemberPage({ name }) {
                 to="/requests"
                 className="btn btn-outline btn-success"
               >
-                Lihat Status
+                Cek Status Request
               </Link>
             </div>
           </div>

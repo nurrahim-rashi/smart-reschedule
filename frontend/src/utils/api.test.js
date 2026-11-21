@@ -6,6 +6,7 @@ import {
     cancelBooking,
     generateDecisionDraft,
     getRescheduleRequests,
+    getMyCancelledBookings,
 } from './api.js';
 
 function mockFetch(responseJson) {
@@ -148,5 +149,23 @@ describe('getRescheduleRequests', () => {
 
         expect(fetchSpy.mock.calls[0][0]).toBe('http://localhost:5000/reschedule-requests?status=pending');
         expect(result).toEqual({ error: false, data: [{ id: 1 }] });
+    });
+});
+
+describe('getMyCancelledBookings', () => {
+    it('harus mengambil daftar jadwal yang dibatalkan', async () => {
+        const bookings = [{ id: 3, schedule: 'Sabtu, 28 Nov 19:00', cancelledAt: '2026-11-21T10:00:00.000Z' }];
+        const fetchSpy = mockFetch({ status: 'success', data: { bookings } });
+
+        const result = await getMyCancelledBookings();
+
+        expect(fetchSpy.mock.calls[0][0]).toBe('http://localhost:5000/bookings/me/cancelled');
+        expect(result).toEqual({ error: false, data: bookings });
+    });
+
+    it('harus mengembalikan daftar kosong kalau gagal', async () => {
+        mockFetch({ status: 'fail', message: 'error' });
+
+        expect(await getMyCancelledBookings()).toEqual({ error: true, data: [] });
     });
 });

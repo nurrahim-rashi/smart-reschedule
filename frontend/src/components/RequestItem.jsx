@@ -6,6 +6,7 @@ const STATUS_BADGES = {
   pending: { label: "Menunggu Persetujuan", className: "badge-warning" },
   approved: { label: "Disetujui", className: "badge-success" },
   rejected: { label: "Ditolak", className: "badge-error" },
+  cancelled: { label: "Dibatalkan Member", className: "badge-neutral" },
 };
 
 const INTENT_LABELS = {
@@ -242,6 +243,11 @@ function RequestItem({
             </p>
           )}
         </div>
+      ) : request.status === "cancelled" ? (
+        <p className="mt-4 text-sm text-base-content/60">
+          Member membatalkan jadwal {request.oldSchedule} sebelum
+          request ini diputuskan.
+        </p>
       ) : (
         <div className="mt-4">
           <p className="text-sm text-base-content/60 mb-1">
@@ -262,7 +268,10 @@ function RequestItem({
 
         {request.reviewedAt && (
           <>
-            {" "}· Diputuskan pada{" "}
+            {" "}·{" "}
+            {request.status === "cancelled"
+              ? "Dibatalkan pada"
+              : "Diputuskan pada"}{" "}
             {showFormattedDate(
               request.reviewedAt
             )}

@@ -4,11 +4,14 @@ const { Pool } = pkg;
 
 const TIMEZONE = process.env.APP_TIMEZONE || 'Asia/Jakarta';
 const SLOT_CAPACITY = Number(process.env.SLOT_CAPACITY) || 20;
-const SLOT_DAYS_AHEAD = Number(process.env.SLOT_DAYS_AHEAD) || 30;
+export const SLOT_DAYS_AHEAD = Number(process.env.SLOT_DAYS_AHEAD) || 30;
 
 // Jam buka gym: slot pertama 07:00, slot terakhir 20:00 (selesai 21:00)
 const FIRST_SLOT_HOUR = 7;
 const LAST_SLOT_HOUR = 20;
+
+// Tanggal terakhir yang slotnya boleh dipilih customer
+export const getMaxSlotDate = (now = new Date()) => new Date(now.getTime() + (SLOT_DAYS_AHEAD - 1) * 24 * 60 * 60 * 1000);
 
 class TimeSlotsRepository {
     constructor() {
@@ -67,9 +70,12 @@ class TimeSlotsRepository {
                 LEFT JOIN bookings b ON b.slot_id = ts.id AND b.status = 'active'
                 WHERE ts.is_active = true
                     AND ts.start_time > now()
+                    -- Hanya sampai SLOT_DAYS_AHEAD hari ke depan (termasuk hari ini)
+                    AND ts.start_time < (date_trunc('day', now() AT TIME ZONE $1) + make_interval(days => $2)) AT TIME ZONE $1
                 GROUP BY ts.id
                 HAVING ts.capacity - COUNT(b.id) > 0
                 ORDER BY ts.start_time`,
+            values: [TIMEZONE, SLOT_DAYS_AHEAD],
         };
 
         const result = await this.pool.query(query);

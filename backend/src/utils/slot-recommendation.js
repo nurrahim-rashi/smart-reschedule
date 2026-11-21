@@ -87,12 +87,18 @@ export const resolvePreferredDay = (day, now = new Date()) => {
     }
 
     const weeksMatch = key.match(/^(\d+) minggu lagi$/);
-    const weeks = key === 'minggu depan' ? 1 : Number(weeksMatch?.[1]);
+    const monthsMatch = key.match(/^(\d+) bulan lagi$/);
 
-    if (weeks) {
+    // 1 bulan dianggap 30 hari
+    let startOffset = null;
+    if (key === 'minggu depan') startOffset = 7;
+    if (weeksMatch) startOffset = Number(weeksMatch[1]) * 7;
+    if (monthsMatch) startOffset = Number(monthsMatch[1]) * 30;
+
+    if (startOffset) {
         return {
-            dateFrom: daysFromNow(now, weeks * 7),
-            dateTo: daysFromNow(now, weeks * 7 + 6),
+            dateFrom: daysFromNow(now, startOffset),
+            dateTo: daysFromNow(now, startOffset + 6),
             isRange: true,
         };
     }
@@ -123,11 +129,25 @@ const dayDistance = (slot, preferredDay) => {
  *
  * Mengembalikan:
  * - matched: slot yang cocok dengan semua preferensi
+ * - clampedToMaxDate: true jika tanggal yang diminta melewati maxDateKey
  * - alternatives: pilihan cadangan jika slot yang cocok sedikit/tidak ada, dengan alasan:
  *   hari yang sama jam terdekat, jam yang sama di hari lain, lalu slot paling awal
  */
-export const recommendSlots = (slots, { day, period, time } = {}, now = new Date()) => {
-    const preferredDay = resolvePreferredDay(day, now);
+export const recommendSlots = (slots, { day, period, time } = {}, now = new Date(), { maxDateKey } = {}) => {
+    let preferredDay = resolvePreferredDay(day, now);
+    let clampedToMaxDate = false;
+
+    // Jadwal hanya bisa dipilih sampai maxDateKey. Permintaan yang lebih jauh
+    // ditahan ke tanggal terakhir itu, supaya customer tetap dapat pilihan.
+    if (preferredDay?.dateFrom && maxDateKey) {
+        if (preferredDay.dateFrom > maxDateKey) {
+            preferredDay = { dateFrom: maxDateKey, dateTo: maxDateKey };
+            clampedToMaxDate = true;
+        } else if (preferredDay.dateTo > maxDateKey) {
+            preferredDay = { ...preferredDay, dateTo: maxDateKey };
+        }
+    }
+
     const preferredHour = parsePreferredHour(time, period);
     const preferredPeriod = period ?? (preferredHour !== null ? getPeriod(preferredHour) : null);
     const targetHour = preferredHour ?? PERIOD_CENTER[preferredPeriod] ?? null;
@@ -215,5 +235,5 @@ export const recommendSlots = (slots, { day, period, time } = {}, now = new Date
         addAlternatives(slots, 'Slot terdekat', MAX_ALTERNATIVES);
     }
 
-    return { matched, alternatives };
+    return { matched, alternatives, clampedToMaxDate };
 };

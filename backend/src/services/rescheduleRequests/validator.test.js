@@ -75,3 +75,9 @@ describe('validateDecisionDraftPayload', () => {
         expect(() => validateDecisionDraftPayload({})).toThrow(InvariantError);
     });
 });
+
+describe('validateRequestQuery status cancelled', () => {
+    it('harus lolos kalau status cancelled', () => {
+        expect(validateRequestQuery({ status: 'cancelled' })).toEqual({ status: 'cancelled' });
+    });
+});
