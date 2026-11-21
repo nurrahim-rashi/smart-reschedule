@@ -1,8 +1,8 @@
 import pkg from 'pg';
+import { TIMEZONE } from "../../utils/slot-label.js";
 
 const { Pool } = pkg;
 
-const TIMEZONE = process.env.APP_TIMEZONE || 'Asia/Jakarta';
 const SLOT_CAPACITY = Number(process.env.SLOT_CAPACITY) || 20;
 export const SLOT_DAYS_AHEAD = Number(process.env.SLOT_DAYS_AHEAD) || 30;
 

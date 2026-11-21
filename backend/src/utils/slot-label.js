@@ -1,4 +1,20 @@
-const TIMEZONE = process.env.APP_TIMEZONE || 'Asia/Jakarta';
+const DEFAULT_TIMEZONE = 'Asia/Jakarta';
+
+// Nilai env bisa membawa spasi/baris baru saat di-paste ke dashboard hosting;
+// zona yang tidak dikenali memakai default alih-alih membuat server crash
+const resolveTimezone = () => {
+    const timezone = (process.env.APP_TIMEZONE || '').trim() || DEFAULT_TIMEZONE;
+
+    try {
+        new Intl.DateTimeFormat('en-US', { timeZone: timezone });
+        return timezone;
+    } catch {
+        console.error(`APP_TIMEZONE tidak valid (${JSON.stringify(process.env.APP_TIMEZONE)}), memakai ${DEFAULT_TIMEZONE}`);
+        return DEFAULT_TIMEZONE;
+    }
+};
+
+export const TIMEZONE = resolveTimezone();
 
 const dayFormatter = new Intl.DateTimeFormat('id-ID', {
     weekday: 'long',
