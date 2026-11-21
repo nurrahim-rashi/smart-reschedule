@@ -84,8 +84,8 @@ async function getMyBookings() {
     return { error: false, data: responseJson.data.bookings };
 }
 
-async function getAvailableSlots(sessionType) {
-    const response = await fetchWithToken(`${BASE_URL}/time-slots/available?sessionType=${sessionType}`);
+async function getAvailableSlots() {
+    const response = await fetchWithToken(`${BASE_URL}/time-slots/available`);
     const responseJson = await response.json();
 
     if (responseJson.status !== 'success') {
@@ -93,6 +93,39 @@ async function getAvailableSlots(sessionType) {
     }
 
     return { error: false, data: responseJson.data.timeSlots };
+}
+
+async function getRecommendedSlots({ day, period, time, excludeSlotId }) {
+    const params = new URLSearchParams();
+
+    if (day) params.set('day', day);
+    if (period) params.set('period', period);
+    if (time) params.set('time', time);
+    if (excludeSlotId) params.set('excludeSlotId', excludeSlotId);
+
+    const response = await fetchWithToken(`${BASE_URL}/time-slots/recommendations?${params}`);
+    const responseJson = await response.json();
+
+    if (responseJson.status !== 'success') {
+        return { error: true, data: { matched: [], alternatives: [] } };
+    }
+
+    return { error: false, data: responseJson.data };
+}
+
+async function addBooking(slotId) {
+    const response = await fetchWithToken(`${BASE_URL}/bookings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slotId }),
+    });
+    const responseJson = await response.json();
+
+    if (responseJson.status !== 'success') {
+        return { error: true, message: responseJson.message };
+    }
+
+    return { error: false, data: responseJson.data };
 }
 
 async function addRescheduleRequests({ bookingId, requestedSlotId, message }) {
@@ -151,4 +184,4 @@ async function rejectRescheduleRequest(id, adminNote) {
     return { error: false };
 }
 
-export { register, login, putAccessToken, getAccessToken, removeAccessToken, getUserLogged, getMyRescheduleRequests, getMyBookings, getAvailableSlots, addRescheduleRequests, getRescheduleRequests, approveRescheduleRequest, rejectRescheduleRequest };
+export { register, login, putAccessToken, getAccessToken, removeAccessToken, getUserLogged, getMyRescheduleRequests, getMyBookings, getAvailableSlots, getRecommendedSlots, addBooking, addRescheduleRequests, getRescheduleRequests, approveRescheduleRequest, rejectRescheduleRequest };

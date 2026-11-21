@@ -1,187 +1,168 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
+import SlotPicker from "../components/SlotPicker.jsx";
+import { analyzeMessage } from "../utils/ai.js";
 import {
   getMyBookings,
   getAvailableSlots,
+  getRecommendedSlots,
   addRescheduleRequests,
 } from "../utils/api.js";
 
+function SlotOption({ slot, selected, onSelect }) {
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(slot)}
+      className={`btn h-auto py-3 justify-between w-full ${
+        selected ? "btn-success" : "btn-ghost border-base-300"
+      }`}
+    >
+      <span className="font-semibold">{slot.label}</span>
+
+      {slot.reason && (
+        <span className={`badge ${selected ? "badge-ghost" : "badge-outline"}`}>
+          {slot.reason}
+        </span>
+      )}
+    </button>
+  );
+}
+
 function ReschedulePage() {
-  const [booking, setBooking] =
-    useState(null);
+  const [bookings, setBookings] = useState([]);
+  const [booking, setBooking] = useState(null);
+  const [timeSlots, setTimeSlots] = useState([]);
+  const [initializing, setInitializing] = useState(true);
 
-  const [message, setMessage] =
-    useState("");
+  const [message, setMessage] = useState("");
+  const [analysis, setAnalysis] = useState(null);
+  const [recommendation, setRecommendation] = useState(null);
+  const [showAllSlots, setShowAllSlots] = useState(false);
+  const [selectedSlot, setSelectedSlot] = useState(null);
 
-  const [analysis, setAnalysis] =
-    useState(null);
-
-  const [timeSlots, setTimeSlots] =
-    useState([]);
-
-  const [selectedSlot, setSelectedSlot] =
-    useState("");
-
-  const [loading, setLoading] =
-    useState(false);
-
-  const [analyzing, setAnalyzing] =
-    useState(false);
-
-  const [successMessage, setSuccessMessage] =
-    useState("");
-
-  const [errorMessage, setErrorMessage] =
-    useState("");
+  const [analyzing, setAnalyzing] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
-    async function fetchBooking() {
-      const result =
-        await getMyBookings();
+    async function fetchData() {
+      const [bookingsResult, slotsResult] = await Promise.all([
+        getMyBookings(),
+        getAvailableSlots(),
+      ]);
 
-      if (!result.error &&
-          result.data.length > 0) {
-        const firstBooking =
-          result.data[0];
-
-        setBooking(firstBooking);
-
-        const slotsResult =
-          await getAvailableSlots(
-            firstBooking.sessionType
-          );
-
-        if (!slotsResult.error) {
-          setTimeSlots(
-            slotsResult.data
-          );
-        }
-      }
+      setBookings(bookingsResult.data);
+      setBooking(bookingsResult.data[0] ?? null);
+      setTimeSlots(slotsResult.data);
+      setInitializing(false);
     }
 
-    fetchBooking();
+    fetchData();
   }, []);
 
-  async function analyzeMessage() {
+  function resetSelection() {
+    setAnalysis(null);
+    setRecommendation(null);
+    setSelectedSlot(null);
+  }
+
+  async function onAnalyze() {
     if (!message.trim()) {
-      setErrorMessage(
-        "Masukkan pesan terlebih dahulu."
-      );
+      setErrorMessage("Masukkan pesan terlebih dahulu.");
       return;
     }
 
     setAnalyzing(true);
     setErrorMessage("");
+    setSuccessMessage("");
+    resetSelection();
 
     try {
-      const response = await fetch(
-        "http://localhost:8000/analyze-message",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-          body: JSON.stringify({
-            message,
-          }),
-        }
-      );
+      const result = await analyzeMessage(message);
 
-      const result =
-        await response.json();
+      if (result.error) {
+        setErrorMessage("Gagal menganalisis pesan. Coba lagi nanti.");
+        return;
+      }
 
-      setAnalysis(result);
+      setAnalysis(result.data);
+
+      const recommendationResult = await getRecommendedSlots({
+        day: result.data.preferred_day,
+        period: result.data.preferred_period,
+        time: result.data.preferred_time,
+        excludeSlotId: booking.slotId,
+      });
+
+      setRecommendation(recommendationResult.data);
     } catch {
-      setErrorMessage(
-        "Gagal menganalisis pesan."
-      );
+      setErrorMessage("Tidak bisa terhubung ke layanan AI.");
     } finally {
       setAnalyzing(false);
     }
   }
 
   async function submitRequest() {
-    if (!selectedSlot) {
-      setErrorMessage(
-        "Pilih slot terlebih dahulu."
-      );
-      return;
-    }
-
     setLoading(true);
     setErrorMessage("");
     setSuccessMessage("");
 
-    const slot = timeSlots.find(
-      (item) =>
-        item.label === selectedSlot
-    );
-
-    const result =
-      await addRescheduleRequests({
-        bookingId: booking.id,
-        requestedSlotId: slot.id,
-        message,
-      });
+    const result = await addRescheduleRequests({
+      bookingId: booking.id,
+      requestedSlotId: selectedSlot.id,
+      message,
+    });
 
     setLoading(false);
 
     if (result.error) {
-      setErrorMessage(
-        result.message
-      );
+      setErrorMessage(result.message);
       return;
     }
 
     setSuccessMessage(
-      "Request reschedule berhasil dikirim."
+      `Request pindah ke ${selectedSlot.label} berhasil dikirim. Tunggu persetujuan admin.`
     );
-
     setMessage("");
-    setSelectedSlot("");
-    setAnalysis(null);
+    resetSelection();
   }
+
+  if (initializing) {
+    return (
+      <div className="max-w-6xl mx-auto px-4 py-6">
+        <span className="loading loading-spinner loading-md"></span>
+      </div>
+    );
+  }
+
+  if (!booking) {
+    return (
+      <div className="max-w-6xl mx-auto px-4 py-6">
+        <h1 className="text-4xl font-bold text-success">Ajukan Reschedule</h1>
+
+        <div className="alert alert-warning mt-6">
+          <span>Anda belum memiliki jadwal. Booking jadwal pertama Anda dulu.</span>
+
+          <Link to="/booking" className="btn btn-sm btn-success">
+            Booking Jadwal
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const otherSlots = timeSlots.filter((slot) => slot.id !== booking.slotId);
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
-      <h1 className="text-4xl font-bold text-success">
-        Ajukan Reschedule
-      </h1>
+      <h1 className="text-4xl font-bold text-success">Ajukan Reschedule</h1>
 
       <p className="text-gray-500 mt-2 mb-6">
-        Kirim permintaan perubahan
-        jadwal latihan Anda.
+        Ceritakan jadwal yang Anda inginkan, AI akan mencarikan slot yang cocok.
       </p>
-
-      {/* Booking */}
-
-      {booking ? (
-        <div className="card bg-base-100 shadow-lg mb-6">
-          <div className="card-body">
-            <h2 className="card-title">
-              Booking Saat Ini
-            </h2>
-
-            <p>
-              {booking.sessionType}
-            </p>
-
-            <p>
-              {booking.schedule}
-            </p>
-          </div>
-        </div>
-      ) : (
-        <div className="alert alert-warning mb-6">
-          <span>
-            Anda belum memiliki
-            booking aktif.
-          </span>
-        </div>
-      )}
-
-      {/* Error */}
 
       {errorMessage && (
         <div className="alert alert-error mb-6">
@@ -189,37 +170,54 @@ function ReschedulePage() {
         </div>
       )}
 
-      {/* Success */}
-
       {successMessage && (
         <div className="alert alert-success mb-6">
-          <span>
-            {successMessage}
-          </span>
+          <span>{successMessage}</span>
         </div>
       )}
+
+      {/* Booking */}
+
+      <div className="card bg-base-100 shadow-lg mb-6">
+        <div className="card-body">
+          <h2 className="card-title">Jadwal Saat Ini</h2>
+
+          {bookings.length > 1 ? (
+            <select
+              className="select select-bordered w-full"
+              value={booking.id}
+              onChange={(e) => {
+                setBooking(bookings.find((item) => item.id === Number(e.target.value)));
+                resetSelection();
+              }}
+            >
+              {bookings.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.schedule}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <p>{booking.schedule}</p>
+          )}
+        </div>
+      </div>
 
       {/* Message */}
 
       <div className="card bg-base-100 shadow-lg mb-6">
         <div className="card-body">
-          <h2 className="card-title">
-            Pesan Reschedule
-          </h2>
+          <h2 className="card-title">Pesan Reschedule</h2>
 
           <textarea
-            className="textarea textarea-bordered h-32"
+            className="textarea textarea-bordered h-32 w-full"
             placeholder="Contoh: Besok saya tidak bisa hadir, ingin pindah ke Sabtu pagi."
             value={message}
-            onChange={(e) =>
-              setMessage(
-                e.target.value
-              )
-            }
+            onChange={(e) => setMessage(e.target.value)}
           />
 
           <button
-            onClick={analyzeMessage}
+            onClick={onAnalyze}
             disabled={analyzing}
             className="btn btn-primary mt-4"
           >
@@ -229,7 +227,7 @@ function ReschedulePage() {
                 Menganalisis...
               </>
             ) : (
-              "Analisis dengan AI"
+              "Cari Slot dengan AI"
             )}
           </button>
         </div>
@@ -240,47 +238,71 @@ function ReschedulePage() {
       {analysis && (
         <div className="card bg-base-100 shadow-lg mb-6">
           <div className="card-body">
-            <h2 className="card-title">
-              Hasil Analisis AI
-            </h2>
+            <h2 className="card-title">Hasil Analisis AI</h2>
 
-            <p>
-              <strong>Intent:</strong>{" "}
-              {analysis.intent}
-            </p>
+            <div className="flex flex-wrap gap-2">
+              <span className="badge badge-primary">Intent: {analysis.intent}</span>
+              <span className="badge badge-outline">Hari: {analysis.preferred_day || "-"}</span>
+              <span className="badge badge-outline">Waktu: {analysis.preferred_period || "-"}</span>
+              <span className="badge badge-outline">Jam: {analysis.preferred_time || "-"}</span>
+            </div>
 
-            {analysis.entities && (
+            {analysis.intent !== "reschedule" && (
+              <div className="alert alert-info mt-4">
+                <span>
+                  Pesan ini tidak terbaca sebagai permintaan reschedule, tapi Anda
+                  tetap bisa memilih slot di bawah.
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Recommendation */}
+
+      {recommendation && (
+        <div className="card bg-base-100 shadow-lg mb-6">
+          <div className="card-body">
+            <h2 className="card-title">Rekomendasi Slot</h2>
+
+            {recommendation.matched.length > 0 ? (
               <>
-                <p>
-                  <strong>Hari:</strong>{" "}
-                  {analysis.entities
-                    ?.preferred_day ||
-                    "-"}
-                </p>
+                <p className="text-sm opacity-70">Sesuai permintaan Anda</p>
 
-                <p>
-                  <strong>Periode:</strong>{" "}
-                  {analysis.entities
-                    ?.preferred_period ||
-                    "-"}
-                </p>
+                <div className="grid gap-2">
+                  {recommendation.matched.map((slot) => (
+                    <SlotOption
+                      key={slot.id}
+                      slot={slot}
+                      selected={selectedSlot?.id === slot.id}
+                      onSelect={setSelectedSlot}
+                    />
+                  ))}
+                </div>
               </>
+            ) : (
+              <div className="alert alert-warning">
+                <span>
+                  Tidak ada slot yang pas dengan permintaan Anda. Berikut beberapa
+                  pilihan terdekat.
+                </span>
+              </div>
             )}
 
-            {analysis.draft_reply && (
+            {recommendation.alternatives.length > 0 && (
               <>
-                <div className="divider"></div>
+                <p className="text-sm opacity-70 mt-4">Alternatif lain</p>
 
-                <div>
-                  <h3 className="font-semibold">
-                    Draft Balasan
-                  </h3>
-
-                  <p className="mt-2">
-                    {
-                      analysis.draft_reply
-                    }
-                  </p>
+                <div className="grid gap-2">
+                  {recommendation.alternatives.map((slot) => (
+                    <SlotOption
+                      key={slot.id}
+                      slot={slot}
+                      selected={selectedSlot?.id === slot.id}
+                      onSelect={setSelectedSlot}
+                    />
+                  ))}
                 </div>
               </>
             )}
@@ -288,56 +310,47 @@ function ReschedulePage() {
         </div>
       )}
 
-      {/* Slots */}
+      {/* All slots */}
 
-      <div className="card bg-base-100 shadow-lg">
+      <div className="card bg-base-100 shadow-lg mb-6">
         <div className="card-body">
-          <h2 className="card-title">
-            Slot Tersedia
-          </h2>
-
-          <select
-            className="select select-bordered w-full"
-            value={selectedSlot}
-            onChange={(e) =>
-              setSelectedSlot(
-                e.target.value
-              )
-            }
-          >
-            <option value="">
-              Pilih slot
-            </option>
-
-            {timeSlots.map((slot) => (
-              <option
-                key={slot.id}
-                value={slot.label}
-              >
-                {slot.label}
-              </option>
-            ))}
-          </select>
-
           <button
-            onClick={submitRequest}
-            disabled={
-              loading ||
-              !selectedSlot
-            }
-            className="btn btn-success mt-4"
+            type="button"
+            onClick={() => setShowAllSlots(!showAllSlots)}
+            className="flex justify-between items-center w-full"
           >
-            {loading ? (
-              <>
-                <span className="loading loading-spinner loading-sm"></span>
-                Mengirim...
-              </>
-            ) : (
-              "Ajukan Reschedule"
-            )}
+            <h2 className="card-title">Pilih dari semua slot</h2>
+            <span>{showAllSlots ? "−" : "+"}</span>
           </button>
+
+          {showAllSlots && (
+            <div className="mt-4">
+              <SlotPicker
+                slots={otherSlots}
+                selectedId={selectedSlot?.id}
+                onSelect={setSelectedSlot}
+              />
+            </div>
+          )}
         </div>
       </div>
+
+      <button
+        onClick={submitRequest}
+        disabled={loading || !selectedSlot}
+        className="btn btn-success w-full"
+      >
+        {loading ? (
+          <>
+            <span className="loading loading-spinner loading-sm"></span>
+            Mengirim...
+          </>
+        ) : selectedSlot ? (
+          `Ajukan pindah ke ${selectedSlot.label}`
+        ) : (
+          "Pilih slot terlebih dahulu"
+        )}
+      </button>
     </div>
   );
 }

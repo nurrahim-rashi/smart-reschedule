@@ -1,16 +1,12 @@
-INSERT INTO time_slots (start_time, end_time, session_type, capacity) VALUES
-('2026-12-05 08:00+07', '2026-12-05 09:00+07', 'Yoga', 10),
-('2026-12-05 10:00+07', '2026-12-05 11:00+07', 'Yoga', 10),
-('2026-12-06 09:00+07', '2026-12-06 10:00+07', 'Yoga', 10),
-('2026-12-06 16:00+07', '2026-12-06 17:00+07', 'Yoga', 10),
-('2026-12-09 18:00+07', '2026-12-09 19:00+07', 'Pilates', 8),
-('2026-12-10 18:00+07', '2026-12-10 19:00+07', 'Pilates', 8);
+-- Jalankan setelah backend pernah start sekali (slot tiap jam dibuat otomatis saat start)
+-- dan setelah akun customer@contoh.com & admin@contoh.com didaftarkan lewat halaman Register.
 
+-- Booking contoh: customer ikut slot besok jam 10:00 WIB
 INSERT INTO bookings (customer_id, slot_id)
 SELECT u.id, ts.id
 FROM users u, time_slots ts
 WHERE u.email = 'customer@contoh.com'
-AND ts.session_type = 'Yoga'
-AND ts.start_time = '2026-12-05 08:00+07';
+AND ts.start_time = (date_trunc('day', now() AT TIME ZONE 'Asia/Jakarta') + interval '1 day 10 hours') AT TIME ZONE 'Asia/Jakarta'
+ON CONFLICT DO NOTHING;
 
 UPDATE users SET role = 'admin' WHERE email = 'admin@contoh.com';

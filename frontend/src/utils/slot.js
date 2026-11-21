@@ -1,32 +1,26 @@
-function getPeriod(hour) {
-    if (hour < 11) return 'pagi';
-    if (hour < 15) return 'siang';
-    if (hour < 18) return 'sore';
-    return 'malam';
-}
+// Kelompokkan slot per tanggal: [[dateKey, [slot, ...]], ...], urutan tetap
+function groupSlotsByDate(slots) {
+    const groups = new Map();
 
-function isSlotMatch(slot, preferredDay, preferredPeriod) {
-    const [day, time] = slot.toLowerCase().split(' ');
-    const hour = Number(time.split(':')[0]);
+    for (const slot of slots) {
+        if (!groups.has(slot.dateKey)) {
+            groups.set(slot.dateKey, []);
+        }
 
-    if (preferredDay && day !== preferredDay) {
-        return false;
+        groups.get(slot.dateKey).push(slot);
     }
 
-    if (preferredPeriod && getPeriod(hour) !== preferredPeriod) {
-        return false;
-    }
-
-    return Boolean(preferredDay || preferredPeriod);
+    return [...groups.entries()];
 }
 
-function getRecommendedSlots(slots, preferredDay, preferredPeriod) {
-    const matched = slots.filter((slot) =>
-    isSlotMatch(slot, preferredDay, preferredPeriod));
-    const others = slots.filter((slot) =>
-    !isSlotMatch(slot, preferredDay, preferredPeriod));
+// "Sabtu, 28 Nov 08:00" -> { dateLabel: "Sabtu, 28 Nov", time: "08:00" }
+function splitSlotLabel(label) {
+    const index = label.lastIndexOf(' ');
 
-    return { matched, others };
+    return {
+        dateLabel: label.slice(0, index),
+        time: label.slice(index + 1),
+    };
 }
 
-export { getPeriod, getRecommendedSlots };
+export { groupSlotsByDate, splitSlotLabel };

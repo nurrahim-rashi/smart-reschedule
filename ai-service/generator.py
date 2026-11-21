@@ -114,6 +114,8 @@ Aturan:
 - Sapa customer dengan namanya jika ada.
 - Sopan, profesional, ramah, dan singkat (maksimal 100 kata).
 - Gunakan Bahasa Indonesia.
+- Tulis slot persis seperti di daftar (hari, tanggal, dan jam).
+- Jangan pakai format markdown seperti **tebal** atau # judul.
 - Tulis isi balasannya saja, tanpa penjelasan tambahan.
 """
 
@@ -169,6 +171,12 @@ Terima kasih."""
 
 TIME_PATTERN = r"\b(\d{1,2})[:.](\d{2})\b"
 
+DAY_PATTERN = r"\b(senin|selasa|rabu|kamis|jumat|sabtu|minggu)\b"
+
+# Seberapa jauh ke belakang nama hari dicari dari sebuah jam,
+# contoh "Minggu, 22 November pukul 08:00"
+DAY_LOOKBACK = 40
+
 
 def extract_times(text):
 
@@ -178,6 +186,33 @@ def extract_times(text):
     }
 
 
+def extract_slot_mentions(text):
+    """
+    Ambil setiap jam beserta nama hari yang disebut tepat sebelumnya.
+
+    "Minggu, 22 Nov 08:00" -> [("minggu", "8:00")]
+    "jam 08:00"            -> [(None, "8:00")]
+    """
+
+    text = (text or "").lower()
+    mentions = []
+
+    for match in re.finditer(TIME_PATTERN, text):
+
+        # Hanya lihat baris yang sama supaya hari dari baris lain tidak terbawa
+        before = text[max(0, match.start() - DAY_LOOKBACK):match.start()]
+        before = before.split("\n")[-1]
+
+        days = re.findall(DAY_PATTERN, before)
+
+        mentions.append((
+            days[-1] if days else None,
+            f"{int(match.group(1))}:{match.group(2)}"
+        ))
+
+    return mentions
+
+
 def validate_reply(
     reply,
     slots,
@@ -185,7 +220,9 @@ def validate_reply(
     current_schedule=None
 ):
     """
-    Pastikan draft tidak menyebut jam yang tidak ada di data.
+    Pastikan draft hanya menyebut slot yang ada di data:
+    setiap pasangan hari + jam harus cocok dengan salah satu slot,
+    dan jam tanpa hari minimal harus ada di salah satu slot.
 
     Returns:
         str | None: alasan draft ditolak, atau None jika valid
@@ -195,15 +232,26 @@ def validate_reply(
 
         return "empty_reply"
 
-    allowed_times = extract_times(
-        " ".join(slots + [message or "", current_schedule or ""])
-    )
+    sources = slots + [message or "", current_schedule or ""]
 
-    unknown_times = extract_times(reply) - allowed_times
+    allowed_times = extract_times(" ".join(sources))
 
-    if unknown_times:
+    allowed_pairs = {
+        mention
+        for source in sources
+        for mention in extract_slot_mentions(source)
+        if mention[0]
+    }
 
-        return f"unknown_time: {', '.join(sorted(unknown_times))}"
+    for day, time in extract_slot_mentions(reply):
+
+        if time not in allowed_times:
+
+            return f"unknown_time: {time}"
+
+        if day and (day, time) not in allowed_pairs:
+
+            return f"unknown_slot: {day} {time}"
 
     return None
 

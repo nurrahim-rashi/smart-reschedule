@@ -59,6 +59,12 @@ function Navigation({
                   </li>
 
                   <li>
+                    <Link to="/booking">
+                      Booking
+                    </Link>
+                  </li>
+
+                  <li>
                     <Link to="/reschedule">
                       Reschedule
                     </Link>
@@ -115,6 +121,12 @@ function Navigation({
                 <li>
                   <Link to="/member">
                     Dashboard
+                  </Link>
+                </li>
+
+                <li>
+                  <Link to="/booking">
+                    Booking
                   </Link>
                 </li>
 

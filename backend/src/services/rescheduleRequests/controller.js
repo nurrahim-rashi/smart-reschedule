@@ -40,10 +40,6 @@ export const postRequestHandler = async (request, h) => {
         throw new InvariantError('Slot yang dipilih sama dengan jadwal sekarang');
     }
 
-    if (slot.session_type !== booking.session_type) {
-        throw new InvariantError('Slot yang dipilih harus untuk sesi yang sama');
-    }
-
     const requestId = await RescheduleRequestsRepository.addRequest({
         customerId,
         bookingId,

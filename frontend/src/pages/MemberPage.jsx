@@ -34,8 +34,15 @@ function MemberPage({ name }) {
 
             <div className="flex flex-col md:flex-row justify-center gap-4">
               <Link
-                to="/reschedule"
+                to="/booking"
                 className="btn btn-success"
+              >
+                Booking Jadwal
+              </Link>
+
+              <Link
+                to="/reschedule"
+                className="btn btn-outline btn-success"
               >
                 Ajukan Reschedule
               </Link>

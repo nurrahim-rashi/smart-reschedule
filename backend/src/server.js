@@ -5,6 +5,7 @@ import users from "./services/users/index.js";
 import authentications from "./services/authentications/index.js";
 import Jwt from '@hapi/jwt';
 import timeSlots from "./services/timeSlots/index.js";
+import TimeSlotsRepository from "./services/timeSlots/repository.js";
 import bookings from "./services/bookings/index.js";
 import rescheduleRequests from "./services/rescheduleRequests/index.js";
 
@@ -73,6 +74,13 @@ const init = async () => {
     await server.register(timeSlots);
     await server.register(bookings);
     await server.register(rescheduleRequests);
+
+    try {
+        const created = await TimeSlotsRepository.ensureUpcomingSlots();
+        console.log(`Slot baru dibuat: ${created}`);
+    } catch (error) {
+        console.error('Gagal membuat slot otomatis:', error.message);
+    }
 
     await server.start();
     console.log(`Server berjalan di ${server.info.uri}`);

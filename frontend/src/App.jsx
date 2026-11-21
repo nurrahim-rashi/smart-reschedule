@@ -5,6 +5,8 @@ import HomePage from "./pages/HomePage.jsx";
 import ReschedulePage from "./pages/ReschedulePage.jsx";
 import RequestStatusPage from "./pages/RequestStatusPage.jsx";
 import AdminPage from "./pages/AdminPage.jsx";
+import MemberPage from "./pages/MemberPage.jsx";
+import BookingPage from "./pages/BookingPage.jsx";
 import Navigation from "./components/Navigation.jsx";
 import { useState, useEffect } from "react";
 import { getUserLogged, putAccessToken, removeAccessToken } from "./utils/api.js";
@@ -71,6 +73,8 @@ function App() {
       <main>
         <Routes>
           <Route path="/" element={<HomePage name={authedUser.name} logout={onLogout} />} />
+          <Route path="/member" element={<MemberPage name={authedUser.name} />} />
+          <Route path="/booking" element={<BookingPage />} />
           <Route path="/reschedule" element={<ReschedulePage />} />
           <Route path="/requests" element={<RequestStatusPage />} />
           {authedUser.role === 'admin' && <Route path="/admin" element={<AdminPage />} />}
