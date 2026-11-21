@@ -8,6 +8,7 @@ import AdminPage from "./pages/AdminPage.jsx";
 import MemberPage from "./pages/MemberPage.jsx";
 import BookingPage from "./pages/BookingPage.jsx";
 import Navigation from "./components/Navigation.jsx";
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import { useState, useEffect } from "react";
 import {
   getUserLogged,
@@ -34,10 +35,12 @@ function App() {
     fetchUser();
   }, []);
 
+  // Mengembalikan user supaya halaman login bisa mengarahkan admin ke /admin
   async function onLoginSuccess({ accessToken }) {
     putAccessToken(accessToken);
     const { data } = await getUserLogged();
     setAuthedUser(data);
+    return data;
   }
 
   function onLogout() {
@@ -82,14 +85,44 @@ function App() {
           />
           <Route
             path="/member"
-            element={<MemberPage name={authedUser.name} />}
+            element={
+              <ProtectedRoute authedUser={authedUser} role="customer">
+                <MemberPage name={authedUser.name} />
+              </ProtectedRoute>
+            }
           />
-          <Route path="/booking" element={<BookingPage />} />
-          <Route path="/reschedule" element={<ReschedulePage />} />
-          <Route path="/requests" element={<RequestStatusPage />} />
-          {authedUser.role === "admin" && (
-            <Route path="/admin" element={<AdminPage />} />
-          )}
+          <Route
+            path="/booking"
+            element={
+              <ProtectedRoute authedUser={authedUser} role="customer">
+                <BookingPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/reschedule"
+            element={
+              <ProtectedRoute authedUser={authedUser} role="customer">
+                <ReschedulePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/requests"
+            element={
+              <ProtectedRoute authedUser={authedUser} role="customer">
+                <RequestStatusPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute authedUser={authedUser} role="admin">
+                <AdminPage />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </main>
 

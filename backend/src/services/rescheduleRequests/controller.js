@@ -110,6 +110,7 @@ export const getRequestsHandler = async (request) => {
             preferredDay: row.preferred_day,
             preferredPeriod: row.preferred_period,
             preferredTime: row.preferred_time,
+            otherIntents: row.other_intents ?? [],
         } : null,
         draftReply: row.draft_text ? {
             text: row.draft_text,

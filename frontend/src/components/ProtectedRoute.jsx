@@ -5,14 +5,6 @@ function ProtectedRoute({
   role,
   children,
 }) {
-  console.log(
-    "ProtectedRoute:",
-    {
-      authedUser,
-      expectedRole: role,
-    }
-  );
-
   if (!authedUser) {
     return (
       <Navigate
@@ -26,12 +18,6 @@ function ProtectedRoute({
     role &&
     authedUser.role !== role
   ) {
-    console.log(
-      "Role mismatch:",
-      authedUser.role,
-      role
-    );
-
     if (authedUser.role === "admin") {
       return (
         <Navigate

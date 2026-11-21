@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { showFormattedDate } from "../utils/date.js";
 import { generateDecisionDraft } from "../utils/api.js";
+import { intentLabel } from "../utils/intent.js";
 
 const STATUS_BADGES = {
   pending: { label: "Menunggu Persetujuan", className: "badge-warning" },
@@ -9,13 +10,6 @@ const STATUS_BADGES = {
   cancelled: { label: "Dibatalkan Member", className: "badge-neutral" },
 };
 
-const INTENT_LABELS = {
-  reschedule: "Reschedule",
-  cancel: "Pembatalan",
-  schedule_inquiry: "Tanya Jadwal",
-  confirmation: "Konfirmasi",
-  other: "Lainnya",
-};
 
 function RequestItem({
   request,
@@ -138,8 +132,7 @@ function RequestItem({
                   : "badge-warning"
               }`}
             >
-              {INTENT_LABELS[analysis.intent] ??
-                analysis.intent}{" "}
+              {intentLabel(analysis.intent)}{" "}
               ({Math.round(analysis.confidence * 100)}%)
             </div>
 
@@ -155,6 +148,15 @@ function RequestItem({
               Jam: {analysis.preferredTime || "-"}
             </div>
           </div>
+
+          {analysis.otherIntents?.length > 0 && (
+            <div className="badge badge-warning mt-2">
+              Juga berisi:{" "}
+              {analysis.otherIntents
+                .map(intentLabel)
+                .join(", ")}
+            </div>
+          )}
 
           {analysis.intent !== "reschedule" && (
             <p className="text-sm text-warning mt-2">

@@ -1,5 +1,7 @@
 # Smart Reschedule Assistant - AI Service
 
+> Dokumentasi terbaru (semua endpoint, intent + kata kunci, multi-intent, guardrail, RAG, dan hasil evaluasi) ada di [docs/AI.md](../docs/AI.md) dan [docs/API.md](../docs/API.md).
+
 AI Service untuk Smart Reschedule Assistant Gymnasyum.
 
 Service ini bertugas untuk:

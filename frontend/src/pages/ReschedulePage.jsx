@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 
 import SlotPicker from "../components/SlotPicker.jsx";
 import { mergeBookedSlots } from "../utils/slot.js";
+import { intentLabel } from "../utils/intent.js";
 import Toast from "../components/Toast.jsx";
 import { analyzeMessage } from "../utils/ai.js";
 import {
@@ -295,13 +296,24 @@ function ReschedulePage() {
 
             <div className="flex flex-wrap gap-2">
               <span className="badge badge-primary">
-                Intent: {analysis.intent}
+                Intent: {intentLabel(analysis.intent)}
                 {analysis.intent_source === "keyword" && " (dari kata kunci)"}
               </span>
               <span className="badge badge-outline">Hari: {analysis.preferred_day || "-"}</span>
               <span className="badge badge-outline">Waktu: {analysis.preferred_period || "-"}</span>
               <span className="badge badge-outline">Jam: {analysis.preferred_time || "-"}</span>
             </div>
+
+            {analysis.other_intents?.length > 0 && (
+              <div className="alert alert-warning mt-4">
+                <span>
+                  Pesan ini juga berisi permintaan lain (
+                  {analysis.other_intents.map(intentLabel).join(", ")}). Satu
+                  pengajuan hanya untuk satu jadwal, jadi ajukan permintaan
+                  lainnya secara terpisah.
+                </span>
+              </div>
+            )}
 
             {analysis.intent === "cancel" && (
               <div className="alert alert-warning mt-4">

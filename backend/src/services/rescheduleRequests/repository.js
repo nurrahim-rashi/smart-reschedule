@@ -87,8 +87,8 @@ class RescheduleRequestsRepository {
 
             await client.query({
                 text: `INSERT INTO ai_analyses
-                        (request_id, intent, confidence, preferred_day, preferred_period, preferred_time)
-                    VALUES ($1, $2, $3, $4, $5, $6)`,
+                        (request_id, intent, confidence, preferred_day, preferred_period, preferred_time, other_intents)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7)`,
                 values: [
                     requestId,
                     aiResult.intent,
@@ -96,6 +96,7 @@ class RescheduleRequestsRepository {
                     aiResult.preferred_day,
                     aiResult.preferred_period,
                     aiResult.preferred_time,
+                    aiResult.other_intents ?? [],
                 ],
             });
 
@@ -132,7 +133,7 @@ class RescheduleRequestsRepository {
         const query = {
             text: `SELECT ${REQUEST_COLUMNS},
                     u.name AS customer_name, u.phone AS customer_phone,
-                    a.intent, a.confidence, a.preferred_day, a.preferred_period, a.preferred_time,
+                    a.intent, a.confidence, a.preferred_day, a.preferred_period, a.preferred_time, a.other_intents,
                     d.draft_text, d.source AS draft_source, d.needs_review
                 FROM reschedule_requests r
                 ${REQUEST_JOINS}

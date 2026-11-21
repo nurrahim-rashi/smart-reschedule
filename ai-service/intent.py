@@ -28,6 +28,12 @@ CANCEL_KEYWORDS = [
     "gak jadi", "ga jadi", "nggak jadi", "tidak jadi", "enggak jadi",
 ]
 
+# Customer yang mengonfirmasi perpindahan ("Mantap kak, jadi pindah ke Senin ya. Saya ok.")
+# juga menyebut kata "pindah", tapi intent-nya confirmation, bukan reschedule
+CONFIRMATION_KEYWORDS = [
+    "ok", "oke", "okay", "okey", "sip", "siap", "mantap", "setuju", "deal", "noted",
+]
+
 # Typo dianggap sama jika kemiripannya >= nilai ini.
 # "pidnahin" vs "pindahin" = 0.88, sedangkan "pinjam" vs "pindah" = 0.67
 FUZZY_CUTOFF = 0.85
@@ -85,6 +91,11 @@ def classify_intent(text):
     wants_reschedule = has_keyword(text, RESCHEDULE_KEYWORDS)
     wants_cancel = has_keyword(text, CANCEL_KEYWORDS)
 
+    # Model membaca konfirmasi dan pesannya memang berisi kata konfirmasi: percayai model
+    if intent == "confirmation" and has_keyword(text, CONFIRMATION_KEYWORDS):
+
+        return intent, confidence, "model"
+
     # Kata kunci hanya dipakai jika maksudnya tidak ambigu
     if wants_reschedule and not wants_cancel and intent != "reschedule":
 
@@ -95,3 +106,74 @@ def classify_intent(text):
         return "cancel", KEYWORD_CONFIDENCE, "keyword"
 
     return intent, confidence, "model"
+
+
+# =========================
+# MULTI INTENT
+# =========================
+
+# Pesan dipecah per kalimat dan kata sambung, mis.
+# "Yang Rabu batalin ya, terus yang Sabtu pindah ke Minggu"
+CLAUSE_SPLIT = r"[.;!?\n]+|,?\s*\b(?:tapi|terus|trus|lalu|sekalian|dan juga)\b"
+
+# Hanya permintaan yang butuh tindakan berbeda yang ditandai
+ACTIONABLE_INTENTS = {"reschedule", "cancel", "schedule_inquiry"}
+
+INQUIRY_KEYWORDS = [
+    "jam berapa", "kapan", "tanya", "nanya", "cek jadwal", "info jadwal",
+]
+
+# Sebuah bagian kalimat baru dihitung sebagai permintaan terpisah jika ada
+# kata kuncinya. Kalimat alasan seperti "lagi ada acara keluarga" sering
+# terbaca cancel oleh model, padahal bukan permintaan.
+INTENT_EVIDENCE = {
+    "reschedule": RESCHEDULE_KEYWORDS,
+    "cancel": CANCEL_KEYWORDS,
+    "schedule_inquiry": INQUIRY_KEYWORDS,
+}
+
+CLAUSE_CONFIDENCE = 0.6
+
+MIN_CLAUSE_WORDS = 3
+
+
+def split_clauses(text):
+
+    return [
+        clause.strip(" ,")
+        for clause in re.split(CLAUSE_SPLIT, text, flags=re.IGNORECASE)
+        if clause and len(clause.split()) >= MIN_CLAUSE_WORDS
+    ]
+
+
+def detect_other_intents(text, primary_intent):
+    """
+    Cari permintaan lain di dalam pesan selain intent utamanya.
+
+    Returns:
+        list[str]: intent tambahan, kosong jika pesan hanya berisi satu permintaan
+    """
+
+    clauses = split_clauses(text)
+
+    if len(clauses) < 2:
+
+        return []
+
+    others = []
+
+    for clause in clauses:
+
+        intent, confidence, _ = classify_intent(clause)
+
+        if (
+            intent in ACTIONABLE_INTENTS
+            and intent != primary_intent
+            and intent not in others
+            and confidence >= CLAUSE_CONFIDENCE
+            and has_keyword(clause, INTENT_EVIDENCE[intent])
+        ):
+
+            others.append(intent)
+
+    return others

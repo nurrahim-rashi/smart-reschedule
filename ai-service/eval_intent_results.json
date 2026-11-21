@@ -1,0 +1,70 @@
+{
+  "model": {
+    "accuracy": 0.95,
+    "correct": 95,
+    "total": 100,
+    "errors": [
+      {
+        "message": "Mohon maaf kak, saya tidak bisa hadir Jumat malam. Bisa diganti ke hari lain?",
+        "expected": "reschedule",
+        "predicted": "confirmation",
+        "tags": "negasi"
+      },
+      {
+        "message": "Kami sekeluarga akan keluar kota, jadi sesi minggu depan tidak usah diadakan ya.",
+        "expected": "cancel",
+        "predicted": "reschedule",
+        "tags": "negasi"
+      },
+      {
+        "message": "Saya tidak jadi memesan sesi hari Minggu.",
+        "expected": "cancel",
+        "predicted": "schedule_inquiry",
+        "tags": "negasi"
+      },
+      {
+        "message": "Jam operasional gymnasyum sampai jam berapa kalau hari Sabtu?",
+        "expected": "schedule_inquiry",
+        "predicted": "confirmation",
+        "tags": "formal"
+      },
+      {
+        "message": "kak minggu depan ada libur kelas ga?",
+        "expected": "schedule_inquiry",
+        "predicted": "cancel",
+        "tags": "negasi|informal"
+      }
+    ]
+  },
+  "aplikasi": {
+    "accuracy": 0.96,
+    "correct": 96,
+    "total": 100,
+    "errors": [
+      {
+        "message": "Mohon maaf kak, saya tidak bisa hadir Jumat malam. Bisa diganti ke hari lain?",
+        "expected": "reschedule",
+        "predicted": "confirmation",
+        "tags": "negasi"
+      },
+      {
+        "message": "Kami sekeluarga akan keluar kota, jadi sesi minggu depan tidak usah diadakan ya.",
+        "expected": "cancel",
+        "predicted": "reschedule",
+        "tags": "negasi"
+      },
+      {
+        "message": "Jam operasional gymnasyum sampai jam berapa kalau hari Sabtu?",
+        "expected": "schedule_inquiry",
+        "predicted": "confirmation",
+        "tags": "formal"
+      },
+      {
+        "message": "kak minggu depan ada libur kelas ga?",
+        "expected": "schedule_inquiry",
+        "predicted": "cancel",
+        "tags": "negasi|informal"
+      }
+    ]
+  }
+}
