@@ -1,7 +1,17 @@
+import sys
 from pathlib import Path
 
 import chromadb
-from sentence_transformers import SentenceTransformer
+
+# Supaya bisa dijalankan sebagai "python rag/build_index.py" dari folder ai-service
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+
+from rag.retriever import (
+    CHROMA_PATH,
+    COLLECTION_NAME,
+    EMBEDDING_MODEL,
+    get_embedding_model,
+)
 
 
 # =========================
@@ -11,19 +21,6 @@ from sentence_transformers import SentenceTransformer
 BASE_DIR = Path(__file__).resolve().parent
 
 FAQ_FILE = BASE_DIR / "knowledge_base" / "faq.txt"
-
-CHROMA_PATH = BASE_DIR / "chroma_db"
-
-COLLECTION_NAME = "gymnasyum_faq"
-
-
-# =========================
-# LOAD MODEL
-# =========================
-
-embedding_model = SentenceTransformer(
-    "all-MiniLM-L6-v2"
-)
 
 
 # =========================
@@ -103,10 +100,11 @@ def build_index():
         pass
 
     collection = client.create_collection(
-        name=COLLECTION_NAME
+        name=COLLECTION_NAME,
+        metadata={"hnsw:space": "cosine"}
     )
 
-    embeddings = embedding_model.encode(
+    embeddings = get_embedding_model().encode(
         documents,
         convert_to_numpy=True
     )
@@ -129,6 +127,7 @@ def build_index():
     print()
     print("✅ Index berhasil dibuat.")
     print(f"📄 Document count: {len(documents)}")
+    print(f"🧠 Model: {EMBEDDING_MODEL}")
     print(f"📁 Database: {CHROMA_PATH}")
 
 
