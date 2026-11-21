@@ -8,17 +8,20 @@ Customer menulis permintaan pindah jadwal dengan bahasa bebas ("pindahin ke ming
 ## Fitur
 
 **Member**
+
 - Booking jadwal: slot tiap jam, setiap hari 07:00–21:00, maksimal 30 hari ke depan
 - Reschedule dengan pesan bebas: AI membaca intent dan preferensi waktu, lalu merekomendasikan slot beserta alternatifnya
 - Pembatalan jadwal
 - Riwayat request dan pembatalan di halaman Status Request
 
 **Admin**
+
 - Daftar request per status: Pending, Disetujui, Ditolak, Dibatalkan
 - Hasil analisis AI: intent, confidence, preferensi, dan permintaan lain di pesan yang sama
 - Draf balasan AI sesuai keputusan (setuju, atau tolak dengan slot alternatif) yang bisa diedit
 
 **AI**
+
 - Klasifikasi 5 intent (BiLSTM + lapisan kata kunci tahan typo)
 - Ekstraksi hari, waktu, dan jam, termasuk waktu relatif ("besok", "3 minggu lagi", "bulan depan")
 - Draf balasan dengan Gemini, divalidasi agar hanya menyebut slot dari database
@@ -36,12 +39,12 @@ backend (Hapi, :5000) ───────► ai-service (FastAPI, :8000)
 PostgreSQL                         └─ ChromaDB (RAG FAQ)
 ```
 
-| Folder | Isi |
-|---|---|
-| [frontend/](frontend/) | React + Vite, Tailwind CSS + daisyUI |
-| [backend/](backend/) | Hapi (Node.js), PostgreSQL, node-pg-migrate, JWT |
-| [ai-service/](ai-service/) | FastAPI, TensorFlow (BiLSTM), Gemini, ChromaDB |
-| [docs/](docs/) | Dokumentasi API, database, AI, dan panduan admin |
+| Folder                     | Isi                                              |
+| -------------------------- | ------------------------------------------------ |
+| [frontend/](frontend/)     | React + Vite, Tailwind CSS + daisyUI             |
+| [backend/](backend/)       | Hapi (Node.js), PostgreSQL, node-pg-migrate, JWT |
+| [ai-service/](ai-service/) | FastAPI, TensorFlow (BiLSTM), Gemini, ChromaDB   |
+| [docs/](docs/)             | Dokumentasi API, database, AI, dan panduan admin |
 
 ## Menjalankan secara lokal
 
@@ -107,11 +110,11 @@ cd ai-service && python -m unittest test_intent.py test_extractor.py test_genera
 
 Evaluasi AI (membutuhkan model dan, untuk draf, API key Gemini):
 
-| Script | Yang diukur | Hasil terakhir |
-|---|---|---|
+| Script                  | Yang diukur                                 | Hasil terakhir                      |
+| ----------------------- | ------------------------------------------- | ----------------------------------- |
 | `python eval_intent.py` | Intent pada test set independen (100 pesan) | BiLSTM 95%, BiLSTM + kata kunci 96% |
-| `python eval_drafts.py` | Kualitas draf balasan Gemini (12 skenario) | 12/12 lolos semua cek |
-| `python eval_rag.py` | Ketepatan retrieval FAQ (20 pertanyaan) | Top-1 16/20, top-3 19/20 |
+| `python eval_drafts.py` | Kualitas draf balasan Gemini (12 skenario)  | 12/12 lolos semua cek               |
+| `python eval_rag.py`    | Ketepatan retrieval FAQ (20 pertanyaan)     | Top-1 16/20, top-3 19/20            |
 
 ## Dokumentasi
 
@@ -119,12 +122,4 @@ Evaluasi AI (membutuhkan model dan, untuk draf, API key Gemini):
 - [docs/DATABASE.md](docs/DATABASE.md): skema database dan aturan slot
 - [docs/AI.md](docs/AI.md): model intent, ekstraksi, prompt, guardrail, dan evaluasi
 - [docs/PANDUAN-ADMIN.md](docs/PANDUAN-ADMIN.md): panduan penggunaan untuk admin
-
-## Tim
-
-| NIM | Nama | Learning path |
-|---|---|---|
-| B26B15A019 | Rashifa Ashri Nurrahim | Generative AI |
-| B26B15J028 | Rahiel Tiara Azzahra | React JS |
-| B26B15A016 | Yose Willmingthon Simanjuntak | Generative AI |
-| B26B15J030 | Muhammad Dzikri Abadi | React JS |
+- [docs/Panduan Penggunaan - DB15-G006.pdf](<docs/Panduan Penggunaan - DB15-G006.pdf>): panduan penggunaan produk lengkap untuk member dan admin, dengan screenshot

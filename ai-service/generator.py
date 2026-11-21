@@ -2,6 +2,8 @@ import logging
 import os
 import re
 
+import httpx
+
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
@@ -14,10 +16,20 @@ logger = logging.getLogger(__name__)
 
 load_dotenv()
 
+# FORCE_IPV4=1: untuk jaringan yang IPv6-nya ke Google tidak jalan. Tanpa ini,
+# koneksi menunggu IPv6 sekitar 2 menit sebelum beralih ke IPv4.
+client_args = (
+    {"transport": httpx.HTTPTransport(local_address="0.0.0.0")}
+    if os.getenv("FORCE_IPV4") == "1"
+    else None
+)
+
 client = genai.Client(
     api_key=os.getenv("GEMINI_API_KEY"),
     http_options=types.HttpOptions(
-        timeout=15000  # milidetik
+        timeout=15000,  # milidetik
+        retry_options=types.HttpRetryOptions(attempts=1),
+        client_args=client_args
     )
 )
 
