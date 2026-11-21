@@ -90,3 +90,36 @@ export const ensureSlots = async () => {
         console.error('Gagal membuat slot otomatis:', error.message);
     }
 };
+
+// Handler serverless untuk Vercel. Vercel otomatis menjadikan src/app.js
+// sebagai entry point dan memanggil default export ini untuk setiap request.
+// Server Hapi dibuat sekali per instance, tanpa server.start().
+let serverPromise;
+
+const getServer = () => {
+    if (!serverPromise) {
+        serverPromise = (async () => {
+            const server = await createServer();
+            await server.initialize();
+            await ensureSlots();
+            return server;
+        })();
+    }
+
+    return serverPromise;
+};
+
+export default async function handler(req, res) {
+    // vercel.json mengirim path asli lewat query __path
+    const url = new URL(req.url, 'http://localhost');
+    const originalPath = url.searchParams.get('__path');
+
+    if (originalPath !== null) {
+        url.searchParams.delete('__path');
+        const query = url.searchParams.toString();
+        req.url = (originalPath.startsWith('/') ? originalPath : `/${originalPath}`) + (query ? `?${query}` : '');
+    }
+
+    const server = await getServer();
+    server.listener.emit('request', req, res);
+}
