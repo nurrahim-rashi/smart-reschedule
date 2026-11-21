@@ -123,3 +123,6 @@ Evaluasi AI (membutuhkan model dan, untuk draf, API key Gemini):
 - [docs/AI.md](docs/AI.md): model intent, ekstraksi, prompt, guardrail, dan evaluasi
 - [docs/PANDUAN-ADMIN.md](docs/PANDUAN-ADMIN.md): panduan penggunaan untuk admin
 - [docs/Panduan Penggunaan - DB15-G006.pdf](<docs/Panduan Penggunaan - DB15-G006.pdf>): panduan penggunaan produk lengkap untuk member dan admin, dengan screenshot
+- [docs/User Guide - DB15-G006.pdf](<docs/User Guide - DB15-G006.pdf>): product user guide (English)
+- [docs/PPT Smart Reschedule Assistant (Indonesia).pdf](<docs/PPT Smart Reschedule Assistant (Indonesia).pdf>): slide presentasi
+- [docs/PPT Smart Reschedule Assistant (English).pdf](<docs/PPT Smart Reschedule Assistant (English).pdf>): presentation slides (English)
