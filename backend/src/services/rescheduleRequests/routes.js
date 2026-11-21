@@ -4,6 +4,7 @@ import {
     getRequestsHandler,
     approveRequestHandler,
     rejectRequestHandler,
+    postDecisionDraftHandler,
 } from "./controller.js";
 
 const options = {
@@ -43,6 +44,13 @@ const routes = [
         method: 'POST',
         path: '/reschedule-requests/{id}/reject',
         handler: rejectRequestHandler,
+        options,
+    },
+
+    {
+        method: 'POST',
+        path: '/reschedule-requests/{id}/decision-draft',
+        handler: postDecisionDraftHandler,
         options,
     },
 ];

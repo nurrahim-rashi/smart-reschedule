@@ -1,5 +1,6 @@
 import logging
 import os
+from typing import Literal
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
@@ -7,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from predictor import predict_intent
-from generator import generate_reply, fallback_reply
+from generator import generate_reply, fallback_reply, generate_decision_reply
 from extractor import extract_preferences
 from rag.chat import answer_question
 
@@ -71,6 +72,16 @@ class ReplyRequest(BaseModel):
     preferred_day: str | None = None
     preferred_period: str | None = None
     preferred_time: str | None = None
+
+
+class DecisionRequest(BaseModel):
+    decision: Literal["approved", "rejected"]
+    old_schedule: str = Field(min_length=1, max_length=100)
+    new_schedule: str = Field(min_length=1, max_length=100)
+    alternatives: list[str] = Field(default=[], max_length=10)
+    customer_name: str | None = Field(default=None, max_length=100)
+    message: str | None = Field(default=None, max_length=1000)
+    reason: str | None = Field(default=None, max_length=300)
 
 
 class DraftRequest(BaseModel):
@@ -262,6 +273,29 @@ def draft_reply(request: DraftRequest):
         "draft_reply": draft,
         "source": source,
         "needs_review": source != "gemini"
+    }
+
+
+# =========================
+# ADMIN DECISION REPLY
+# =========================
+
+@app.post("/decision-reply")
+def decision_reply(request: DecisionRequest):
+
+    draft, source = generate_decision_reply(
+        request.decision,
+        request.old_schedule,
+        request.new_schedule,
+        request.alternatives,
+        request.customer_name,
+        request.message,
+        request.reason
+    )
+
+    return {
+        "draft_reply": draft,
+        "source": source
     }
 
 @app.post("/chat")

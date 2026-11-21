@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { getAvailableSlots, getRecommendedSlots, addBooking } from './api.js';
+import { getAvailableSlots, getRecommendedSlots, addBooking, cancelBooking, generateDecisionDraft } from './api.js';
 
 function mockFetch(responseJson) {
     return vi.spyOn(globalThis, 'fetch').mockResolvedValue({
@@ -78,5 +78,49 @@ describe('addBooking', () => {
         const result = await addBooking(3);
 
         expect(result).toEqual({ error: true, message: 'Slot sudah penuh' });
+    });
+});
+
+describe('cancelBooking', () => {
+    it('harus memanggil endpoint cancel untuk booking yang dipilih', async () => {
+        const fetchSpy = mockFetch({ status: 'success', data: { closedRequests: 1 } });
+
+        const result = await cancelBooking(9);
+
+        expect(fetchSpy.mock.calls[0][0]).toBe('http://localhost:5000/bookings/9/cancel');
+        expect(fetchSpy.mock.calls[0][1].method).toBe('POST');
+        expect(result).toEqual({ error: false, data: { closedRequests: 1 } });
+    });
+
+    it('harus meneruskan pesan error, misalnya jadwal sudah berjalan', async () => {
+        mockFetch({ status: 'fail', message: 'Jadwal yang sudah berjalan tidak bisa dibatalkan' });
+
+        const result = await cancelBooking(9);
+
+        expect(result).toEqual({ error: true, message: 'Jadwal yang sudah berjalan tidak bisa dibatalkan' });
+    });
+});
+
+describe('generateDecisionDraft', () => {
+    it('harus mengirim keputusan dan alasan lalu mengembalikan draf', async () => {
+        const data = {
+            draftReply: { text: 'Maaf Kak, slot penuh.', source: 'gemini', needsReview: false },
+            alternatives: ['Minggu, 29 Nov 08:00'],
+        };
+        const fetchSpy = mockFetch({ status: 'success', data });
+
+        const result = await generateDecisionDraft(4, { decision: 'rejected', reason: 'slot penuh' });
+
+        expect(fetchSpy.mock.calls[0][0]).toBe('http://localhost:5000/reschedule-requests/4/decision-draft');
+        expect(JSON.parse(fetchSpy.mock.calls[0][1].body)).toEqual({ decision: 'rejected', reason: 'slot penuh' });
+        expect(result).toEqual({ error: false, data });
+    });
+
+    it('harus meneruskan pesan error kalau AI tidak tersedia', async () => {
+        mockFetch({ status: 'fail', message: 'Layanan AI sedang tidak tersedia' });
+
+        const result = await generateDecisionDraft(4, { decision: 'approved' });
+
+        expect(result).toEqual({ error: true, message: 'Layanan AI sedang tidak tersedia' });
     });
 });

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { validateRequestPayload, validateRequestQuery, validateRequestParams } from "./validator.js";
+import { validateRequestPayload, validateRequestQuery, validateRequestParams, validateDecisionDraftPayload } from "./validator.js";
 import { InvariantError } from "../../exceptions/index.js";
 
 describe('validateRequestPayload', () => {
@@ -56,5 +56,22 @@ describe('validateRequestParams', () => {
 
     it('harus error kalau id bukan angka', () => {
         expect(() => validateRequestParams({ id: 'abc' })).toThrow(InvariantError);
+    });
+});
+
+describe('validateDecisionDraftPayload', () => {
+    it('harus lolos untuk keputusan approved tanpa alasan', () => {
+        expect(validateDecisionDraftPayload({ decision: 'approved' })).toEqual({ decision: 'approved' });
+    });
+
+    it('harus lolos untuk keputusan rejected dengan alasan', () => {
+        const payload = { decision: 'rejected', reason: 'slot penuh' };
+
+        expect(validateDecisionDraftPayload(payload)).toEqual(payload);
+    });
+
+    it('harus error kalau keputusan tidak dikenal', () => {
+        expect(() => validateDecisionDraftPayload({ decision: 'pending' })).toThrow(InvariantError);
+        expect(() => validateDecisionDraftPayload({})).toThrow(InvariantError);
     });
 });

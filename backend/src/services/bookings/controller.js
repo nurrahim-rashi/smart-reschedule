@@ -1,6 +1,6 @@
 import BookingsRepository from "./repository.js";
 import { formatSlotLabel } from "../../utils/slot-label.js";
-import { validateBookingPayload } from "./validator.js";
+import { validateBookingPayload, validateBookingParams } from "./validator.js";
 
 export const getMyBookingsHandler = async (request) => {
     const { id } = request.auth.credentials;
@@ -32,4 +32,17 @@ export const postBookingHandler = async (request, h) => {
         message: 'Booking berhasil dibuat',
         data: { bookingId },
     }).code(201);
+};
+
+export const cancelBookingHandler = async (request) => {
+    const { id: customerId } = request.auth.credentials;
+    const { id: bookingId } = validateBookingParams(request.params);
+
+    const closedRequests = await BookingsRepository.cancelBooking({ bookingId, customerId });
+
+    return {
+        status: 'success',
+        message: 'Booking berhasil dibatalkan',
+        data: { closedRequests },
+    };
 };

@@ -146,6 +146,32 @@ class RescheduleRequestsRepository {
         return result.rows;
     }
 
+    async getRequestDetail(requestId) {
+        const query = {
+            text: `SELECT r.id, r.status, r.message, r.old_slot_id, r.requested_slot_id,
+                    old_ts.start_time AS old_start_time, new_ts.start_time AS new_start_time,
+                    u.name AS customer_name,
+                    a.preferred_day, a.preferred_period, a.preferred_time
+                FROM reschedule_requests r
+                ${REQUEST_JOINS}
+                JOIN users u ON u.id = r.customer_id
+                LEFT JOIN ai_analyses a ON a.request_id = r.id
+                WHERE r.id = $1`,
+            values: [requestId],
+        };
+
+        const result = await this.pool.query(query);
+        return result.rows[0] ?? null;
+    }
+
+    async addDraft(requestId, { text, source, needsReview }) {
+        await this.pool.query({
+            text: `INSERT INTO reply_drafts (request_id, draft_text, source, needs_review)
+                VALUES ($1, $2, $3, $4)`,
+            values: [requestId, text, source, needsReview],
+        });
+    }
+
     async approveRequest({ requestId, adminId, adminNote }) {
         const client = await this.pool.connect();
 

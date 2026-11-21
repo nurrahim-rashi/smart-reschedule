@@ -1,9 +1,17 @@
 import RescheduleRequestsRepository from "./repository.js";
 import UsersRepository from "../users/repository.js";
-import { validateRequestPayload, validateReviewPayload, validateRequestQuery, validateRequestParams } from "./validator.js";
+import {
+    validateRequestPayload,
+    validateReviewPayload,
+    validateRequestQuery,
+    validateRequestParams,
+    validateDecisionDraftPayload,
+} from "./validator.js";
 import { InvariantError, NotFoundError } from "../../exceptions/index.js";
 import { verifyAdmin } from "../../security/authorization.js";
-import { getDraftReply } from "../../ai/ai-client.js";
+import { getDraftReply, getDecisionReply } from "../../ai/ai-client.js";
+import { getUpcomingAvailableSlots } from "../timeSlots/controller.js";
+import { recommendSlots } from "../../utils/slot-recommendation.js";
 import { formatSlotLabel } from "../../utils/slot-label.js";
 
 const mapRequest = (row) => ({
@@ -147,4 +155,66 @@ export const rejectRequestHandler = async (request) => {
         status: 'success',
         message: 'Request reschedule ditolak',
     };
+};
+
+const MAX_DRAFT_ALTERNATIVES = 3;
+
+export const postDecisionDraftHandler = async (request, h) => {
+    verifyAdmin(request.auth.credentials);
+    const { id } = validateRequestParams(request.params);
+    const { decision, reason } = validateDecisionDraftPayload(request.payload);
+
+    const detail = await RescheduleRequestsRepository.getRequestDetail(id);
+    if (!detail) {
+        throw new NotFoundError('Request reschedule tidak ditemukan');
+    }
+
+    if (detail.status !== 'pending') {
+        throw new InvariantError(`Request ini sudah ${detail.status}`);
+    }
+
+    // Saat menolak, tawarkan slot lain yang paling dekat dengan preferensi customer
+    let alternatives = [];
+
+    if (decision === 'rejected') {
+        const excluded = new Set([detail.old_slot_id, detail.requested_slot_id]);
+        const slots = (await getUpcomingAvailableSlots()).filter((slot) => !excluded.has(slot.id));
+
+        const { matched, alternatives: others } = recommendSlots(slots, {
+            day: detail.preferred_day,
+            period: detail.preferred_period,
+            time: detail.preferred_time,
+        });
+
+        alternatives = [...matched, ...others]
+            .slice(0, MAX_DRAFT_ALTERNATIVES)
+            .map((slot) => slot.label);
+    }
+
+    const aiResult = await getDecisionReply({
+        decision,
+        oldSchedule: formatSlotLabel(detail.old_start_time),
+        newSchedule: formatSlotLabel(detail.new_start_time),
+        alternatives,
+        customerName: detail.customer_name,
+        message: detail.message,
+        reason: reason || null,
+    });
+
+    if (!aiResult) {
+        throw new InvariantError('Layanan AI sedang tidak tersedia, silakan tulis catatan secara manual');
+    }
+
+    const draftReply = {
+        text: aiResult.draft_reply,
+        source: aiResult.source,
+        needsReview: aiResult.source !== 'gemini',
+    };
+
+    await RescheduleRequestsRepository.addDraft(id, draftReply);
+
+    return h.response({
+        status: 'success',
+        data: { draftReply, alternatives },
+    }).code(201);
 };

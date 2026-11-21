@@ -8,6 +8,7 @@ import {
   getAvailableSlots,
   getRecommendedSlots,
   addRescheduleRequests,
+  cancelBooking,
 } from "../utils/api.js";
 
 function SlotOption({ slot, selected, onSelect }) {
@@ -46,6 +47,7 @@ function ReschedulePage() {
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -126,6 +128,32 @@ function ReschedulePage() {
     setSuccessMessage(
       `Request pindah ke ${selectedSlot.label} berhasil dikirim. Tunggu persetujuan admin.`
     );
+    setMessage("");
+    resetSelection();
+  }
+
+  async function onCancelBooking() {
+    if (!window.confirm(`Batalkan jadwal ${booking.schedule}?`)) {
+      return;
+    }
+
+    setCancelling(true);
+    setErrorMessage("");
+
+    const result = await cancelBooking(booking.id);
+
+    setCancelling(false);
+
+    if (result.error) {
+      setErrorMessage(result.message);
+      return;
+    }
+
+    const remaining = bookings.filter((item) => item.id !== booking.id);
+
+    setSuccessMessage(`Jadwal ${booking.schedule} berhasil dibatalkan.`);
+    setBookings(remaining);
+    setBooking(remaining[0] ?? null);
     setMessage("");
     resetSelection();
   }
@@ -247,7 +275,23 @@ function ReschedulePage() {
               <span className="badge badge-outline">Jam: {analysis.preferred_time || "-"}</span>
             </div>
 
-            {analysis.intent !== "reschedule" && (
+            {analysis.intent === "cancel" && (
+              <div className="alert alert-warning mt-4">
+                <span>
+                  Sepertinya Anda ingin membatalkan jadwal {booking.schedule}.
+                </span>
+
+                <button
+                  onClick={onCancelBooking}
+                  disabled={cancelling}
+                  className="btn btn-sm btn-error"
+                >
+                  {cancelling ? "Membatalkan..." : "Batalkan Jadwal Ini"}
+                </button>
+              </div>
+            )}
+
+            {analysis.intent !== "reschedule" && analysis.intent !== "cancel" && (
               <div className="alert alert-info mt-4">
                 <span>
                   Pesan ini tidak terbaca sebagai permintaan reschedule, tapi Anda

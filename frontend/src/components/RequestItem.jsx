@@ -1,5 +1,14 @@
 import { useState } from "react";
 import { showFormattedDate } from "../utils/date.js";
+import { generateDecisionDraft } from "../utils/api.js";
+
+const INTENT_LABELS = {
+  reschedule: "Reschedule",
+  cancel: "Pembatalan",
+  schedule_inquiry: "Tanya Jadwal",
+  confirmation: "Konfirmasi",
+  other: "Lainnya",
+};
 
 function RequestItem({
   request,
@@ -8,6 +17,51 @@ function RequestItem({
 }) {
   const [adminNote, setAdminNote] =
     useState("");
+
+  const [rejectReason, setRejectReason] =
+    useState("");
+
+  const [draftSource, setDraftSource] =
+    useState(null);
+
+  const [generating, setGenerating] =
+    useState(null);
+
+  const [draftError, setDraftError] =
+    useState("");
+
+  const analysis = request.aiAnalysis;
+
+  async function onGenerateDraft(decision) {
+    setGenerating(decision);
+    setDraftError("");
+
+    const result =
+      await generateDecisionDraft(
+        request.id,
+        {
+          decision,
+          reason:
+            decision === "rejected"
+              ? rejectReason
+              : undefined,
+        }
+      );
+
+    setGenerating(null);
+
+    if (result.error) {
+      setDraftError(result.message);
+      return;
+    }
+
+    setAdminNote(
+      result.data.draftReply.text
+    );
+    setDraftSource(
+      result.data.draftReply.source
+    );
+  }
 
   return (
     <div>
@@ -61,30 +115,51 @@ function RequestItem({
         </div>
       </div>
 
-      {request.aiAnalysis && (
+      {analysis ? (
         <div className="mt-4">
           <p className="text-sm text-gray-500 mb-1">
             Hasil Analisis AI
           </p>
 
-          <div className="badge badge-success">
-            {request.aiAnalysis.intent}
+          <div className="flex flex-wrap gap-2">
+            <div
+              className={`badge ${
+                analysis.intent === "reschedule"
+                  ? "badge-success"
+                  : "badge-warning"
+              }`}
+            >
+              {INTENT_LABELS[analysis.intent] ??
+                analysis.intent}{" "}
+              ({Math.round(analysis.confidence * 100)}%)
+            </div>
+
+            <div className="badge badge-outline">
+              Hari: {analysis.preferredDay || "-"}
+            </div>
+
+            <div className="badge badge-outline">
+              Waktu: {analysis.preferredPeriod || "-"}
+            </div>
+
+            <div className="badge badge-outline">
+              Jam: {analysis.preferredTime || "-"}
+            </div>
           </div>
-        </div>
-      )}
 
-      {request.draftReply && (
-        <div className="mt-4">
-          <p className="text-sm text-gray-500 mb-1">
-            Draft Balasan AI
-          </p>
-
-          <textarea
-            className="textarea textarea-bordered w-full"
-            value={request.draftReply.text}
-            readOnly
-          />
+          {analysis.intent !== "reschedule" && (
+            <p className="text-sm text-warning mt-2">
+              AI membaca pesan ini bukan sebagai
+              permintaan reschedule. Cek pesan
+              member sebelum memutuskan.
+            </p>
+          )}
         </div>
+      ) : (
+        <p className="mt-4 text-sm text-gray-500">
+          Analisis AI tidak tersedia untuk
+          request ini.
+        </p>
       )}
 
       <div className="mt-4">
@@ -92,15 +167,71 @@ function RequestItem({
           Catatan Admin
         </p>
 
+        <div className="flex flex-col md:flex-row gap-2 mb-2">
+          <button
+            type="button"
+            className="btn btn-sm btn-outline btn-success"
+            disabled={generating !== null}
+            onClick={() =>
+              onGenerateDraft("approved")
+            }
+          >
+            {generating === "approved" && (
+              <span className="loading loading-spinner loading-xs"></span>
+            )}
+            Draf AI: Setujui
+          </button>
+
+          <input
+            type="text"
+            className="input input-bordered input-sm flex-1"
+            placeholder="Alasan menolak (opsional), mis. slot penuh"
+            value={rejectReason}
+            onChange={(event) =>
+              setRejectReason(
+                event.target.value
+              )
+            }
+          />
+
+          <button
+            type="button"
+            className="btn btn-sm btn-outline btn-error"
+            disabled={generating !== null}
+            onClick={() =>
+              onGenerateDraft("rejected")
+            }
+          >
+            {generating === "rejected" && (
+              <span className="loading loading-spinner loading-xs"></span>
+            )}
+            Draf AI: Tolak + Alternatif
+          </button>
+        </div>
+
+        {draftError && (
+          <p className="text-sm text-error mb-2">
+            {draftError}
+          </p>
+        )}
+
         <textarea
-          className="textarea textarea-bordered w-full"
-          rows="3"
-          placeholder="Tambahkan catatan untuk member (opsional)..."
+          className="textarea textarea-bordered w-full whitespace-pre-line"
+          rows="6"
+          placeholder="Tulis catatan untuk member, atau buat draf dengan AI di atas..."
           value={adminNote}
           onChange={(event) =>
             setAdminNote(event.target.value)
           }
         />
+
+        {draftSource && (
+          <p className="text-xs text-gray-500 mt-1">
+            {draftSource === "gemini"
+              ? "Draf dibuat AI dan sudah dicek hanya menyebut slot dari database. Silakan edit sebelum mengirim."
+              : "AI sedang tidak tersedia, draf diisi dari template. Silakan edit sebelum mengirim."}
+          </p>
+        )}
       </div>
 
       <div className="mt-4 text-sm text-gray-500">

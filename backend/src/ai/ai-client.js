@@ -29,3 +29,38 @@ export const getDraftReply = async ({ message, slots, customerName, currentSched
         return null;
     }
 };
+
+/**
+ * Minta draf balasan setelah admin memutuskan request reschedule.
+ * Mengembalikan null jika ai-service gagal.
+ */
+export const getDecisionReply = async ({
+    decision, oldSchedule, newSchedule, alternatives, customerName, message, reason,
+}) => {
+    try {
+        const response = await fetch(`${AI_SERVICE_URL}/decision-reply`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                decision,
+                old_schedule: oldSchedule,
+                new_schedule: newSchedule,
+                alternatives,
+                customer_name: customerName,
+                message,
+                reason,
+            }),
+            signal: AbortSignal.timeout(30000),
+        });
+
+        if (!response.ok) {
+            console.error(`ai-service membalas ${response.status}`);
+            return null;
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Gagal menghubungi ai-service:', error.message);
+        return null;
+    }
+};

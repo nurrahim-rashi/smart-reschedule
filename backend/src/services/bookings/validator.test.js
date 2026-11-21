@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { validateBookingPayload } from "./validator.js";
+import { validateBookingPayload, validateBookingParams } from "./validator.js";
 import { InvariantError } from "../../exceptions/index.js";
 
 describe('validateBookingPayload', () => {
@@ -18,5 +18,16 @@ describe('validateBookingPayload', () => {
 
     it('harus error kalau payload kosong', () => {
         expect(() => validateBookingPayload(null)).toThrow(InvariantError);
+    });
+});
+
+describe('validateBookingParams', () => {
+    it('harus mengubah id dari URL menjadi angka', () => {
+        expect(validateBookingParams({ id: '12' })).toEqual({ id: 12 });
+    });
+
+    it('harus error kalau id bukan angka positif', () => {
+        expect(() => validateBookingParams({ id: 'abc' })).toThrow(InvariantError);
+        expect(() => validateBookingParams({ id: '-1' })).toThrow(InvariantError);
     });
 });

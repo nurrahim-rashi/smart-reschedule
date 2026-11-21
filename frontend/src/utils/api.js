@@ -128,6 +128,19 @@ async function addBooking(slotId) {
     return { error: false, data: responseJson.data };
 }
 
+async function cancelBooking(id) {
+    const response = await fetchWithToken(`${BASE_URL}/bookings/${id}/cancel`, {
+        method: 'POST',
+    });
+    const responseJson = await response.json();
+
+    if (responseJson.status !== 'success') {
+        return { error: true, message: responseJson.message };
+    }
+
+    return { error: false, data: responseJson.data };
+}
+
 async function addRescheduleRequests({ bookingId, requestedSlotId, message }) {
     const response = await fetchWithToken(`${BASE_URL}/reschedule-requests`, {
         method: 'POST',
@@ -152,6 +165,21 @@ async function getRescheduleRequests() {
     }
 
     return { error: false, data: responseJson.data.rescheduleRequests};
+}
+
+async function generateDecisionDraft(id, { decision, reason }) {
+    const response = await fetchWithToken(`${BASE_URL}/reschedule-requests/${id}/decision-draft`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ decision, reason }),
+    });
+    const responseJson = await response.json();
+
+    if (responseJson.status !== 'success') {
+        return { error: true, message: responseJson.message };
+    }
+
+    return { error: false, data: responseJson.data };
 }
 
 async function approveRescheduleRequest(id, adminNote) {
@@ -184,4 +212,4 @@ async function rejectRescheduleRequest(id, adminNote) {
     return { error: false };
 }
 
-export { register, login, putAccessToken, getAccessToken, removeAccessToken, getUserLogged, getMyRescheduleRequests, getMyBookings, getAvailableSlots, getRecommendedSlots, addBooking, addRescheduleRequests, getRescheduleRequests, approveRescheduleRequest, rejectRescheduleRequest };
+export { register, login, putAccessToken, getAccessToken, removeAccessToken, getUserLogged, getMyRescheduleRequests, getMyBookings, getAvailableSlots, getRecommendedSlots, addBooking, cancelBooking, addRescheduleRequests, getRescheduleRequests, generateDecisionDraft, approveRescheduleRequest, rejectRescheduleRequest };

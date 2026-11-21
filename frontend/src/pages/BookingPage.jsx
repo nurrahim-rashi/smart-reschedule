@@ -6,6 +6,7 @@ import {
   getMyBookings,
   getAvailableSlots,
   addBooking,
+  cancelBooking,
 } from "../utils/api.js";
 
 function BookingPage() {
@@ -17,6 +18,8 @@ function BookingPage() {
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
+  const [bookingToCancel, setBookingToCancel] = useState(null);
+  const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -49,6 +52,31 @@ function BookingPage() {
 
     setSuccessMessage(`Booking ${selectedSlot.label} berhasil dibuat.`);
     setSelectedSlot(null);
+    setReloadKey((key) => key + 1);
+  }
+
+  function openCancelModal(booking) {
+    setBookingToCancel(booking);
+    document.getElementById("cancel_booking_modal")?.showModal();
+  }
+
+  async function confirmCancel() {
+    setCancelling(true);
+    setErrorMessage("");
+    setSuccessMessage("");
+
+    const result = await cancelBooking(bookingToCancel.id);
+
+    setCancelling(false);
+    document.getElementById("cancel_booking_modal")?.close();
+
+    if (result.error) {
+      setErrorMessage(result.message);
+      return;
+    }
+
+    setSuccessMessage(`Jadwal ${bookingToCancel.schedule} berhasil dibatalkan.`);
+    setBookingToCancel(null);
     setReloadKey((key) => key + 1);
   }
 
@@ -93,12 +121,22 @@ function BookingPage() {
                 >
                   <span>{booking.schedule}</span>
 
-                  <Link
-                    to="/reschedule"
-                    className="btn btn-sm btn-outline btn-success"
-                  >
-                    Reschedule
-                  </Link>
+                  <div className="flex gap-2">
+                    <Link
+                      to="/reschedule"
+                      className="btn btn-sm btn-outline btn-success"
+                    >
+                      Reschedule
+                    </Link>
+
+                    <button
+                      type="button"
+                      onClick={() => openCancelModal(booking)}
+                      className="btn btn-sm btn-outline btn-error"
+                    >
+                      Batalkan
+                    </button>
+                  </div>
                 </li>
               ))}
             </ul>
@@ -138,6 +176,41 @@ function BookingPage() {
           </button>
         </div>
       </div>
+
+      <dialog id="cancel_booking_modal" className="modal">
+        <div className="modal-box">
+          <h3 className="font-bold text-lg">Batalkan Jadwal</h3>
+
+          <p className="py-4">
+            Yakin ingin membatalkan jadwal {bookingToCancel?.schedule}?
+            Request reschedule untuk jadwal ini yang masih menunggu juga akan
+            ditutup.
+          </p>
+
+          <div className="modal-action">
+            <form method="dialog">
+              <button className="btn" disabled={cancelling}>
+                Kembali
+              </button>
+            </form>
+
+            <button
+              onClick={confirmCancel}
+              disabled={cancelling}
+              className="btn btn-error"
+            >
+              {cancelling ? (
+                <>
+                  <span className="loading loading-spinner loading-sm"></span>
+                  Membatalkan...
+                </>
+              ) : (
+                "Ya, Batalkan"
+              )}
+            </button>
+          </div>
+        </div>
+      </dialog>
     </div>
   );
 }

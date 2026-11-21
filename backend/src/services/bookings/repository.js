@@ -1,5 +1,5 @@
 import pkg from 'pg';
-import { InvariantError } from "../../exceptions/index.js";
+import { InvariantError, NotFoundError } from "../../exceptions/index.js";
 
 const { Pool } = pkg;
 
@@ -65,6 +65,56 @@ class BookingsRepository {
             if (error.code === UNIQUE_VIOLATION) {
                 throw new InvariantError('Anda sudah booking slot ini');
             }
+            throw error;
+        } finally {
+            client.release();
+        }
+    }
+    async cancelBooking({ bookingId, customerId }) {
+        const client = await this.pool.connect();
+
+        try {
+            await client.query('BEGIN');
+
+            const bookingResult = await client.query({
+                text: `SELECT b.customer_id, b.status, ts.start_time > now() AS is_upcoming
+                    FROM bookings b
+                    JOIN time_slots ts ON ts.id = b.slot_id
+                    WHERE b.id = $1
+                    FOR UPDATE OF b`,
+                values: [bookingId],
+            });
+
+            const booking = bookingResult.rows[0];
+            if (!booking || booking.customer_id !== customerId) {
+                throw new NotFoundError('Booking tidak ditemukan');
+            }
+
+            if (booking.status !== 'active') {
+                throw new InvariantError('Booking ini sudah dibatalkan');
+            }
+
+            if (!booking.is_upcoming) {
+                throw new InvariantError('Jadwal yang sudah berjalan tidak bisa dibatalkan');
+            }
+
+            await client.query({
+                text: "UPDATE bookings SET status = 'cancelled' WHERE id = $1",
+                values: [bookingId],
+            });
+
+            // Request reschedule yang masih menunggu ikut ditutup
+            const requestResult = await client.query({
+                text: `UPDATE reschedule_requests
+                    SET status = 'rejected', admin_note = 'Booking dibatalkan oleh member', reviewed_at = now()
+                    WHERE booking_id = $1 AND status = 'pending'`,
+                values: [bookingId],
+            });
+
+            await client.query('COMMIT');
+            return requestResult.rowCount;
+        } catch (error) {
+            await client.query('ROLLBACK');
             throw error;
         } finally {
             client.release();

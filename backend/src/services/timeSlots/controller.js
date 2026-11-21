@@ -13,7 +13,7 @@ const mapSlot = (slot) => ({
     ...getSlotParts(slot.start_time),
 });
 
-const getUpcomingAvailableSlots = async () => {
+export const getUpcomingAvailableSlots = async () => {
     await TimeSlotsRepository.ensureUpcomingSlots();
     const rows = await TimeSlotsRepository.getAvailableTimeSlots();
     return rows.map(mapSlot);

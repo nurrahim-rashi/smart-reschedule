@@ -7,7 +7,17 @@ Jalankan:
 
 import unittest
 
-from generator import build_prompt, fallback_reply, validate_reply
+from unittest.mock import patch
+from types import SimpleNamespace
+
+from generator import (
+    build_decision_prompt,
+    build_prompt,
+    fallback_decision_reply,
+    fallback_reply,
+    generate_decision_reply,
+    validate_reply,
+)
 
 
 SLOTS = ["Sabtu, 28 Nov 08:00", "Minggu, 29 Nov 16:00"]
@@ -104,6 +114,66 @@ class FallbackReplyTest(unittest.TestCase):
         for intent in ["reschedule", "cancel", "schedule_inquiry", "confirmation", "other"]:
 
             self.assertIsNone(check(fallback_reply(intent, SLOTS)), intent)
+
+
+OLD = "Selasa, 24 Nov 10:00"
+NEW = "Sabtu, 28 Nov 08:00"
+ALTERNATIVES = ["Minggu, 29 Nov 08:00"]
+
+
+class DecisionReplyTest(unittest.TestCase):
+
+    def test_prompt_approved_tidak_menawarkan_alternatif(self):
+
+        prompt = build_decision_prompt("approved", OLD, NEW)
+
+        self.assertIn("DISETUJUI", prompt)
+        self.assertIn("- (tidak ada)", prompt)
+
+    def test_prompt_rejected_memuat_alasan_dan_alternatif(self):
+
+        prompt = build_decision_prompt("rejected", OLD, NEW, ALTERNATIVES, reason="slot penuh")
+
+        self.assertIn("DITOLAK", prompt)
+        self.assertIn("Alasan: slot penuh", prompt)
+        self.assertIn("- Minggu, 29 Nov 08:00", prompt)
+
+    def test_fallback_rejected_menyebut_jadwal_lama_dan_alternatif(self):
+
+        reply = fallback_decision_reply("rejected", OLD, NEW, ALTERNATIVES, "Budi", "slot penuh")
+
+        self.assertIn("Halo Kak Budi,", reply)
+        self.assertIn("karena slot penuh", reply)
+        self.assertIn(f"Jadwal Kakak tetap {OLD}", reply)
+        self.assertIn("- Minggu, 29 Nov 08:00", reply)
+
+    @patch("generator.client")
+    def test_draf_gemini_yang_valid_dipakai(self, client):
+
+        client.models.generate_content.return_value = SimpleNamespace(
+            text=f"Halo Kak, jadwal pindah dari {OLD} ke {NEW}."
+        )
+
+        self.assertEqual(generate_decision_reply("approved", OLD, NEW)[1], "gemini")
+
+    @patch("generator.client")
+    def test_draf_gemini_dengan_slot_karangan_diganti_template(self, client):
+
+        client.models.generate_content.return_value = SimpleNamespace(
+            text="Maaf Kak, coba slot Senin, 30 Nov 09:00 ya."
+        )
+
+        draft, source = generate_decision_reply("rejected", OLD, NEW, ALTERNATIVES)
+
+        self.assertEqual(source, "fallback")
+        self.assertNotIn("09:00", draft)
+
+    @patch("generator.client")
+    def test_gemini_error_pakai_template(self, client):
+
+        client.models.generate_content.side_effect = Exception("504")
+
+        self.assertEqual(generate_decision_reply("approved", OLD, NEW)[1], "fallback")
 
 
 if __name__ == "__main__":
