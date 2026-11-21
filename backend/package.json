@@ -7,7 +7,8 @@
     "start": "node src/server.js",
     "start:dev": "nodemon src/server.js",
     "migrate": "node-pg-migrate",
-    "test": "vitest run"
+    "test": "vitest run",
+    "vercel-build": "node-pg-migrate up"
   },
   "keywords": [],
   "author": "",
