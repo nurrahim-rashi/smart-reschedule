@@ -1,7 +1,6 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "./pages/LoginPage.jsx";
 import RegisterPage from "./pages/RegisterPage.jsx";
-import HomePage from "./pages/HomePage.jsx";
 import ReschedulePage from "./pages/ReschedulePage.jsx";
 import RequestStatusPage from "./pages/RequestStatusPage.jsx";
 import AdminPage from "./pages/AdminPage.jsx";
@@ -80,8 +79,13 @@ function App() {
       <main className="flex-1">
         <Routes>
           <Route
-            path="/"
-            element={<HomePage name={authedUser.name} logout={onLogout} />}
+            path="*"
+            element={
+              <Navigate
+                to={authedUser.role === "admin" ? "/admin" : "/member"}
+                replace
+              />
+            }
           />
           <Route
             path="/member"
